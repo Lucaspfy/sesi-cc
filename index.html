@@ -1,0 +1,2301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fluxo de Compras — Pack to You</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --p50:  #faf5ff; --p100: #f3e8ff; --p200: #e9d5ff; --p300: #d8b4fe;
+      --p400: #c084fc; --p500: #a855f7; --p600: #9333ea; --p700: #7e22ce;
+      --p800: #6b21a8; --p900: #4c1d95;
+
+      --b50:  #eff6ff; --b100: #dbeafe; --b200: #bfdbfe; --b300: #93c5fd;
+      --b500: #3b82f6; --b600: #2563eb; --b700: #1d4ed8;
+
+      --green: #059669; --green-bg: #ecfdf5; --green-border: #a7f3d0;
+      --amber: #d97706; --amber-bg: #fffbeb; --amber-border: #fde68a;
+      --red:   #dc2626; --red-bg:   #fef2f2; --red-border:   #fecaca;
+
+      --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb;
+      --gray-300: #d1d5db; --gray-400: #9ca3af; --gray-500: #6b7280;
+      --gray-700: #374151; --gray-900: #111827;
+
+      --text:       #1e1b4b;
+      --text-muted: #6b7280;
+      --border:     #e9d5ff;
+      --border-sm:  #f3e8ff;
+      --bg:         #ffffff;
+      --bg-subtle:  #faf8ff;
+
+      --fh: 'Outfit', sans-serif;
+      --fb: 'DM Sans', sans-serif;
+
+      --r:   8px;  --rl: 12px; --rxl: 16px;
+      --sh:  0 1px 3px rgba(88,28,135,.08), 0 1px 2px rgba(88,28,135,.04);
+      --shm: 0 4px 12px rgba(88,28,135,.12);
+      --shl: 0 12px 40px rgba(88,28,135,.18);
+    }
+
+    body { font-family: var(--fb); background: var(--bg-subtle); color: var(--text); min-height: 100vh; }
+
+    /* ── HEADER ── */
+    .hdr {
+      background: linear-gradient(135deg, #3b0764 0%, #4c1d95 45%, #1e3a8a 100%);
+      display: flex; align-items: stretch; padding: 0 28px;
+      box-shadow: 0 4px 24px rgba(59,7,100,.35);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .hdr-brand {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 0; margin-right: 20px; flex-shrink: 0;
+    }
+    .hdr-logo {
+      width: 38px; height: 38px;
+      background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.2);
+      border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      font-family: var(--fh); font-weight: 800; font-size: 17px; color: #fff;
+    }
+    .hdr-info h1 { font-family: var(--fh); font-size: 14px; font-weight: 700; color: #fff; letter-spacing: .01em; }
+    .hdr-info p  { font-size: 11px; color: rgba(255,255,255,.55); font-weight: 400; margin-top: 1px; }
+    .hdr-sep { width: 1px; background: rgba(255,255,255,.15); margin: 14px 20px 14px 0; flex-shrink: 0; }
+    .hdr-user {
+      margin-left: auto; display: flex; align-items: center; gap: 10px; padding: 0 0 0 20px; flex-shrink: 0;
+    }
+    .hdr-user-name { font-size: 11.5px; color: rgba(255,255,255,.75); font-weight: 500; }
+    .hdr-user-perfil { font-size: 10px; color: rgba(255,255,255,.45); }
+    .btn-logout {
+      background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+      color: rgba(255,255,255,.75); border-radius: var(--r); padding: 5px 11px;
+      font-size: 11.5px; cursor: pointer; font-family: var(--fb); transition: all .15s;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,.2); color: #fff; }
+    /* LOGIN OVERLAY */
+    .login-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: linear-gradient(135deg, #3b0764 0%, #4c1d95 50%, #1e3a8a 100%);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .login-card {
+      background: #fff; border-radius: var(--rxl); box-shadow: 0 24px 80px rgba(0,0,0,.45);
+      width: 100%; max-width: 360px; padding: 36px 32px;
+    }
+    .login-logo {
+      width: 52px; height: 52px; margin: 0 auto 14px;
+      background: linear-gradient(135deg, var(--p700), var(--b700));
+      border-radius: 14px; display: flex; align-items: center; justify-content: center;
+      font-family: var(--fh); font-weight: 800; font-size: 22px; color: #fff;
+    }
+    /* CONFIGURAÇÕES */
+    .user-row {
+      display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+      border-bottom: 1px solid var(--border-sm); font-size: 13px;
+    }
+    .user-row:hover { background: var(--p50); }
+    .user-row:last-child { border-bottom: none; }
+    .perfil-badge {
+      display: inline-flex; align-items: center; padding: 2px 9px;
+      border-radius: 100px; font-size: 10.5px; font-weight: 600;
+    }
+    .pb-gestao  { background: #1e1b4b; color: #fff; }
+    .pb-compras { background: var(--p100); color: var(--p800); }
+    .pb-estoque { background: var(--b50); color: var(--b700); }
+    .pb-producao{ background: var(--green-bg); color: var(--green); }
+
+    /* TABS */
+    .tabs { display: flex; gap: 1px; }
+    .tab-btn {
+      background: none; border: none; border-bottom: 2px solid transparent;
+      cursor: pointer; font-family: var(--fb); font-size: 12.5px; font-weight: 500;
+      color: rgba(255,255,255,.55); padding: 0 18px; white-space: nowrap;
+      transition: all .18s; letter-spacing: .02em;
+    }
+    .tab-btn:hover { color: rgba(255,255,255,.85); background: rgba(255,255,255,.05); }
+    .tab-btn.active { color: #fff; border-bottom-color: #c084fc; background: rgba(255,255,255,.08); }
+    .tab-btn .tab-icon { margin-right: 6px; font-size: 13px; }
+
+    /* ── CONTENT ── */
+    .content { padding: 24px 28px; max-width: 1440px; margin: 0 auto; }
+    .tab-panel { display: none; animation: fadeIn .2s ease; }
+    .tab-panel.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── CARDS ── */
+    .card { background: #fff; border: 1px solid var(--border-sm); border-radius: var(--rl); box-shadow: var(--sh); }
+    .card-hdr {
+      padding: 14px 18px; border-bottom: 1px solid var(--border-sm);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .card-title { font-family: var(--fh); font-size: 13px; font-weight: 600; color: var(--text); }
+    .card-body { padding: 18px; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 8px 14px; border-radius: var(--r); border: none;
+      cursor: pointer; font-family: var(--fb); font-size: 12.5px; font-weight: 500;
+      transition: all .15s; text-decoration: none; white-space: nowrap;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--p700), var(--b700));
+      color: #fff; box-shadow: 0 2px 8px rgba(126,34,206,.28);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(126,34,206,.38); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-sec { background: var(--p50); color: var(--p700); border: 1px solid var(--p200); }
+    .btn-sec:hover { background: var(--p100); }
+    .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--gray-200); }
+    .btn-ghost:hover { background: var(--gray-50); }
+    .btn-danger { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+    .btn-danger:hover { background: #fee2e2; }
+    .btn-success { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+    .btn-success:hover { background: #d1fae5; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn-xs { padding: 3px 8px; font-size: 11px; }
+
+    /* ── FORMS ── */
+    .fg { margin-bottom: 14px; }
+    .fg:last-child { margin-bottom: 0; }
+    .label {
+      display: block; font-size: 11px; font-weight: 600; color: var(--p800);
+      margin-bottom: 5px; letter-spacing: .04em; text-transform: uppercase;
+    }
+    .fc {
+      width: 100%; padding: 8px 11px; border: 1px solid var(--gray-200);
+      border-radius: var(--r); font-family: var(--fb); font-size: 13.5px;
+      color: var(--text); background: #fff; transition: all .15s; outline: none;
+    }
+    .fc:focus { border-color: var(--p400); box-shadow: 0 0 0 3px rgba(168,85,247,.1); }
+    .fc::placeholder { color: var(--gray-300); }
+    textarea.fc { resize: vertical; min-height: 76px; }
+    select.fc { cursor: pointer; }
+
+    /* ── GRID ── */
+    .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .g4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
+    .split { display: grid; grid-template-columns: 1fr 1.3fr; gap: 18px; }
+
+    /* ── BADGES ── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 9px; border-radius: 100px;
+      font-size: 11px; font-weight: 600; letter-spacing: .02em;
+    }
+    .b-pend  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+    .b-nego  { background: var(--b50);      color: var(--b600);  border: 1px solid var(--b200); }
+    .b-ped   { background: var(--p100);     color: var(--p700);  border: 1px solid var(--p300); }
+    .b-rec   { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+    .b-conc  { background: #1e1b4b; color: #fff; border: 1px solid #3730a3; }
+
+    /* ── TABLES ── */
+    .twrap { overflow-x: auto; border-radius: var(--rl); border: 1px solid var(--border-sm); }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { background: linear-gradient(90deg, var(--p50), var(--b50)); }
+    th {
+      text-align: left; padding: 10px 13px;
+      font-family: var(--fh); font-size: 10.5px; font-weight: 700;
+      color: var(--p800); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap;
+    }
+    th.tr { text-align: right; }
+    tbody tr { border-top: 1px solid var(--border-sm); transition: background .1s; }
+    tbody tr:hover { background: #faf8ff; }
+    td { padding: 11px 13px; font-size: 12.5px; color: var(--gray-700); vertical-align: middle; }
+    td.tr { text-align: right; font-family: var(--fh); }
+
+    /* ── TREE (ESTRUTURAÇÃO) ── */
+    .tree-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 16px; border-bottom: 1px solid var(--border-sm);
+      transition: background .1s; min-height: 44px;
+    }
+    .tree-row:hover { background: var(--p50); }
+    .tree-row:hover .tree-acts { opacity: 1; }
+    .expand-btn {
+      width: 18px; height: 18px; flex-shrink: 0;
+      background: none; border: 1px solid var(--p300); border-radius: 4px;
+      cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+      font-size: 9px; color: var(--p600); transition: all .15s;
+    }
+    .expand-btn:hover { background: var(--p100); }
+    .leaf-dot { width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--gray-300); font-size: 8px; }
+    .cc-code { font-family: var(--fh); font-size: 11.5px; font-weight: 700; color: var(--p600); min-width: 52px; }
+    .cc-name { font-size: 13px; color: var(--text); flex: 1; }
+    .tree-acts { display: flex; gap: 5px; opacity: 0; transition: opacity .15s; }
+
+    /* ── GERENCIAL TABLE ── */
+    .ger-table { width: 100%; border-collapse: collapse; }
+    .ger-table thead tr { background: linear-gradient(90deg, var(--p50), var(--b50)); }
+    .ger-table th {
+      padding: 10px 14px; font-family: var(--fh); font-size: 10.5px;
+      font-weight: 700; color: var(--p800); letter-spacing: .06em; text-transform: uppercase;
+    }
+    .ger-table th:first-child { text-align: left; }
+    .ger-table th:not(:first-child) { text-align: right; }
+    .ger-table td { padding: 10px 14px; font-size: 12.5px; border-bottom: 1px solid var(--border-sm); vertical-align: middle; }
+    .ger-table td.num { text-align: right; font-family: var(--fh); }
+    .ger-table tr:hover { background: var(--p50); cursor: default; }
+    .ger-table tr.has-children:hover { cursor: pointer; }
+    .ger-d0 td:first-child { font-weight: 700; color: var(--p900); font-size: 13px; }
+    .ger-d1 td:first-child { font-weight: 500; color: var(--text); }
+    .ger-d2 td:first-child { color: var(--gray-700); font-size: 12px; }
+    .ger-d3 td:first-child { color: var(--gray-500); font-size: 11.5px; }
+
+    /* ── INDICATOR ── */
+    .ind { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; }
+    .ind-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .ind-bar { width: 50px; height: 4px; background: var(--gray-200); border-radius: 2px; overflow: hidden; display: inline-block; }
+    .ind-fill { height: 100%; border-radius: 2px; transition: width .3s; }
+    .ig .ind-dot, .ig .ind-fill { background: var(--green); }  .ig { color: var(--green); }
+    .iy .ind-dot, .iy .ind-fill { background: var(--amber); }  .iy { color: var(--amber); }
+    .ir .ind-dot, .ir .ind-fill { background: var(--red); }    .ir { color: var(--red); }
+
+    /* ── SUMMARY CARDS ── */
+    .sum-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 20px; }
+    .sum-card { background: #fff; border: 1px solid var(--border-sm); border-radius: var(--rl); padding: 18px; box-shadow: var(--sh); position: relative; overflow: hidden; }
+    .sum-card::before { content:''; position: absolute; top:0; left:0; right:0; height: 3px; }
+    .sum-card.prev::before { background: linear-gradient(90deg, var(--p500), var(--p300)); }
+    .sum-card.real::before { background: linear-gradient(90deg, var(--b500), var(--b300)); }
+    .sum-card.sald::before { background: linear-gradient(90deg, var(--green), #34d399); }
+    .sum-card.sald.neg::before { background: linear-gradient(90deg, var(--red), #f87171); }
+    .sum-lbl { font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+    .sum-val { font-family: var(--fh); font-size: 22px; font-weight: 700; }
+    .sum-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+    /* ── SECTION TITLE ── */
+    .stitle {
+      font-family: var(--fh); font-size: 15px; font-weight: 700; color: var(--text);
+      margin-bottom: 14px; display: flex; align-items: center; gap: 9px;
+    }
+    .stitle::before {
+      content: ''; display: block; width: 3px; height: 18px;
+      background: linear-gradient(180deg, var(--p500), var(--b500)); border-radius: 2px;
+    }
+
+    /* ── FILTERS ── */
+    .filters { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+    .fsel {
+      padding: 7px 11px; border: 1px solid var(--gray-200); border-radius: var(--r);
+      font-family: var(--fb); font-size: 12.5px; color: var(--text);
+      background: #fff; cursor: pointer; outline: none;
+    }
+    .fsel:focus { border-color: var(--p400); }
+    .finput {
+      padding: 7px 11px; border: 1px solid var(--gray-200); border-radius: var(--r);
+      font-family: var(--fb); font-size: 12.5px; color: var(--text);
+      background: #fff; outline: none; min-width: 200px;
+    }
+    .finput:focus { border-color: var(--p400); box-shadow: 0 0 0 3px rgba(168,85,247,.1); }
+
+    /* ── FORM PANEL ── */
+    .fpanel {
+      background: var(--bg-subtle); border: 1px solid var(--border);
+      border-radius: var(--rl); padding: 18px; margin-bottom: 16px;
+    }
+    .fpanel-title { font-family: var(--fh); font-size: 13px; font-weight: 600; color: var(--p700); margin-bottom: 14px; }
+
+    /* ── MODAL ── */
+    .overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(30,27,75,.55); backdrop-filter: blur(4px);
+      z-index: 200; align-items: flex-start; justify-content: center;
+      padding: 32px 16px; overflow-y: auto;
+    }
+    .overlay.open { display: flex; }
+    .modal {
+      background: #fff; border-radius: var(--rxl); box-shadow: var(--shl);
+      width: 100%; max-width: 780px; margin: auto;
+    }
+    .modal-hdr {
+      padding: 20px 22px; border-bottom: 1px solid var(--border-sm);
+      background: linear-gradient(135deg, var(--p50), var(--b50));
+      border-radius: var(--rxl) var(--rxl) 0 0;
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    }
+    .modal-hdr-oc { font-family: var(--fh); font-size: 17px; font-weight: 800; color: var(--p900); }
+    .modal-hdr-desc { font-size: 12px; color: var(--text-muted); margin-top: 3px; max-width: 500px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .modal-close {
+      background: #fff; border: 1px solid var(--gray-200); border-radius: 6px;
+      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 13px; color: var(--gray-500); flex-shrink: 0;
+    }
+    .modal-close:hover { background: var(--gray-50); }
+    .modal-body { padding: 22px; }
+    .modal-section { margin-bottom: 22px; }
+    .modal-section-title {
+      font-family: var(--fh); font-size: 12.5px; font-weight: 700;
+      color: var(--p700); text-transform: uppercase; letter-spacing: .06em;
+      margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+    }
+
+    /* ORC CARDS */
+    .orc-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 12px; }
+    .orc-card {
+      border: 2px solid var(--border-sm); border-radius: var(--rl); padding: 14px;
+      transition: all .2s; position: relative;
+    }
+    .orc-card.winner { border-color: var(--green); background: var(--green-bg); }
+    .orc-card.empty {
+      border-style: dashed; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 6px; min-height: 150px;
+      color: var(--gray-300);
+    }
+    .orc-num { font-family: var(--fh); font-size: 10px; font-weight: 700; color: var(--p500); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+    .orc-forn { font-weight: 600; font-size: 13px; margin-bottom: 4px; color: var(--text); }
+    .orc-val { font-family: var(--fh); font-size: 19px; font-weight: 800; color: var(--p700); margin-bottom: 4px; }
+    .orc-detail { font-size: 11.5px; color: var(--text-muted); margin-bottom: 3px; }
+    .orc-actions { display: flex; gap: 6px; margin-top: 10px; }
+
+    /* STATUS FLOW */
+    .flow {
+      display: flex; align-items: center; gap: 6px;
+      padding: 14px 16px; background: var(--bg-subtle);
+      border: 1px solid var(--border-sm); border-radius: var(--rl); flex-wrap: wrap;
+    }
+    .flow-step { display: flex; align-items: center; gap: 6px; }
+    .flow-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--gray-300); flex-shrink: 0; }
+    .flow-dot.done { background: var(--green); }
+    .flow-dot.active { background: var(--p500); }
+    .flow-lbl { font-size: 12px; color: var(--text-muted); }
+    .flow-lbl.done { color: var(--green); font-weight: 500; }
+    .flow-lbl.active { color: var(--p700); font-weight: 700; }
+    .flow-arr { color: var(--gray-300); font-size: 11px; }
+
+    /* ALERT */
+    .alert { padding: 11px 14px; border-radius: var(--r); font-size: 12.5px; }
+    .alert-warn { background: var(--amber-bg); border: 1px solid var(--amber-border); color: #92400e; }
+    .alert-info { background: var(--b50); border: 1px solid var(--b200); color: var(--b700); }
+    .alert-success { background: var(--green-bg); border: 1px solid var(--green-border); color: #065f46; }
+
+    /* EMPTY STATE */
+    .empty { text-align: center; padding: 48px 24px; color: var(--text-muted); }
+    .empty-icon { font-size: 36px; margin-bottom: 10px; }
+    .empty h3 { font-family: var(--fh); font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .empty p { font-size: 12.5px; }
+
+    /* HELPERS */
+    .flex { display: flex; } .aic { align-items: center; } .jcb { justify-content: space-between; }
+    .gap4 { gap: 4px; } .gap6 { gap: 6px; } .gap8 { gap: 8px; }
+    .gap10 { gap: 10px; } .gap12 { gap: 12px; } .gap16 { gap: 16px; }
+    .mb8 { margin-bottom: 8px; } .mb12 { margin-bottom: 12px; }
+    .mb16 { margin-bottom: 16px; } .mb20 { margin-bottom: 20px; }
+    .mt8 { margin-top: 8px; } .mt12 { margin-top: 12px; } .mt16 { margin-top: 16px; }
+    .tmu { color: var(--text-muted); font-size: 12.5px; }
+    .fw6 { font-weight: 600; } .fw7 { font-weight: 700; }
+    .sep { border: none; border-top: 1px solid var(--border-sm); margin: 18px 0; }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 22px; right: 22px;
+      padding: 11px 18px; border-radius: var(--rl); font-size: 13px; font-weight: 500;
+      z-index: 9999; transform: translateY(70px); opacity: 0;
+      transition: all .3s cubic-bezier(.34,1.56,.64,1); box-shadow: var(--shl);
+      color: #fff; pointer-events: none; max-width: 340px;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { background: #065f46; border-left: 3px solid var(--green); }
+    .toast.error   { background: #991b1b; border-left: 3px solid var(--red); }
+    .toast.info    { background: var(--p800); border-left: 3px solid var(--p400); }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--p200); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--p300); }
+
+    /* BUDGET LIST */
+    .bud-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px; border-bottom: 1px solid var(--border-sm); font-size: 13px;
+    }
+    .bud-row:hover { background: var(--p50); }
+    .bud-row:last-child { border-bottom: none; }
+    .bud-code { font-family: var(--fh); font-size: 11px; font-weight: 700; color: var(--p600); min-width: 50px; }
+    .bud-name { flex: 1; color: var(--text); }
+    .bud-per { font-size: 11.5px; color: var(--text-muted); min-width: 70px; }
+    .bud-val { font-family: var(--fh); font-weight: 700; color: var(--p700); min-width: 120px; text-align: right; }
+
+    /* CC MODAL */
+    .cc-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(30,27,75,.5); backdrop-filter: blur(3px);
+      z-index: 300; align-items: center; justify-content: center; padding: 20px;
+    }
+    .cc-overlay.open { display: flex; }
+    .cc-modal {
+      background: #fff; border-radius: var(--rl); box-shadow: var(--shl);
+      width: 100%; max-width: 420px; animation: fadeIn .15s ease;
+    }
+    .cc-modal-hdr {
+      padding: 14px 18px; border-bottom: 1px solid var(--border-sm);
+      display: flex; align-items: center; justify-content: space-between;
+      background: linear-gradient(135deg, var(--p50), var(--b50));
+      border-radius: var(--rl) var(--rl) 0 0;
+    }
+    .cc-modal-title { font-family: var(--fh); font-size: 13.5px; font-weight: 700; color: var(--p800); }
+    .cc-modal-body { padding: 18px; }
+    .tree-toggle {
+      width: 20px; height: 20px; min-width: 20px; padding: 0; flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 8px; border-radius: 4px; color: var(--p500);
+      border: 1px solid var(--p200); background: var(--p50); cursor: pointer;
+      transition: all .15s;
+    }
+    .tree-toggle:hover { background: var(--p100); }
+
+    /* ITEM-ORC BLOCKS */
+    .item-orc-block { border: 1px solid var(--border-sm); border-radius: var(--r); margin-bottom: 12px; overflow: hidden; }
+    .item-orc-block:last-child { margin-bottom: 0; }
+    .item-orc-hdr {
+      display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+      background: var(--bg-subtle); border-bottom: 1px solid var(--border-sm); flex-wrap: wrap;
+    }
+    .item-orc-num {
+      width: 22px; height: 22px; background: var(--p100); color: var(--p700);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; flex-shrink: 0;
+    }
+    .item-orc-desc { flex: 1; font-size: 13px; font-weight: 500; color: var(--text); min-width: 100px; }
+    .item-orc-meta { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; }
+    .item-orc-winner {
+      background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border);
+      border-radius: 100px; font-size: 10.5px; font-weight: 600; padding: 2px 9px; white-space: nowrap;
+    }
+    .item-orc-body { padding: 10px 14px 14px; }
+    .orc-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    .orc-table th {
+      background: var(--p50); color: var(--p800); font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .04em; padding: 7px 10px;
+      border-bottom: 1px solid var(--border); text-align: left;
+    }
+    .orc-table td { padding: 8px 10px; border-bottom: 1px solid var(--border-sm); vertical-align: middle; }
+    .orc-table tbody tr:last-child td { border-bottom: none; }
+    .orc-tr-winner { background: var(--green-bg); }
+    .orc-tr-winner td { border-bottom-color: var(--green-border) !important; }
+    .orc-add-tr td { background: var(--gray-50); padding: 6px 8px; }
+    .orc-add-tr .fc { padding: 6px 8px; font-size: 12px; }
+
+    /* OC ITEMS */
+    .oc-item-add {
+      background: var(--gray-50); border: 1px dashed var(--gray-300);
+      border-radius: var(--r); padding: 14px; margin-bottom: 10px;
+    }
+    .oc-itens-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    .oc-itens-table th {
+      background: var(--p50); color: var(--p800); font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .04em; padding: 7px 10px;
+      border-bottom: 1px solid var(--border); text-align: left;
+    }
+    .oc-itens-table th.tr { text-align: right; }
+    .oc-itens-table td { padding: 7px 10px; border-bottom: 1px solid var(--border-sm); vertical-align: middle; }
+    .oc-itens-table td.tr { text-align: right; }
+    .oc-itens-table tbody tr:last-child td { border-bottom: none; }
+    .oc-itens-total td { background: var(--p50); font-weight: 700; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ORDEM DE MANUTENÇÃO */
+    .pr-baixa   { background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; }
+    .pr-media   { background:var(--amber-bg); color:var(--amber); border:1px solid var(--amber-border); }
+    .pr-alta    { background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; }
+    .pr-urgente { background:var(--red-bg); color:var(--red); border:1px solid var(--red-border); }
+    .om-status-sel {
+      padding:3px 9px; border-radius:100px; font-size:11px; font-weight:600;
+      border:none; cursor:pointer; font-family:var(--fb);
+    }
+    .om-pendente { background:var(--amber-bg); color:var(--amber); }
+    .om-concluido{ background:var(--green-bg); color:var(--green); }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ LOGIN ═══════════════════════════════ -->
+<div class="login-overlay" id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">P</div>
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-family:var(--fh);font-size:20px;font-weight:800;color:var(--text)">Pack For You</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:3px">Acesse sua conta</div>
+    </div>
+    <div class="fg">
+      <label class="label">Usuário</label>
+      <input type="text" class="fc" id="login-user" placeholder="Login" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="fg">
+      <label class="label">Senha</label>
+      <input type="password" class="fc" id="login-pass" placeholder="Senha" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:10px;padding:10px 0;justify-content:center" onclick="doLogin()">Entrar</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ HEADER ═══════════════════════════════ -->
+<header class="hdr">
+  <div class="hdr-brand">
+    <div class="hdr-logo">P</div>
+    <div class="hdr-info">
+      <h1>Pack For You</h1>
+    </div>
+  </div>
+  <div class="hdr-sep"></div>
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="estruturacao" onclick="switchTab('estruturacao',this)">
+      <span class="tab-icon">⬡</span>Estruturação
+    </button>
+    <button class="tab-btn" data-tab="gerencial" onclick="switchTab('gerencial',this)">
+      <span class="tab-icon">◈</span>Gerencial
+    </button>
+    <button class="tab-btn" data-tab="acomp" onclick="switchTab('acomp',this)">
+      <span class="tab-icon">≡</span>Ordens de Compra
+    </button>
+    <button class="tab-btn" data-tab="bi" onclick="switchTab('bi',this)">
+      <span class="tab-icon">◉</span>Acompanhamento BI
+    </button>
+    <button class="tab-btn" data-tab="manut" onclick="switchTab('manut',this)">
+      <span class="tab-icon">🔧</span>Manutenção
+    </button>
+    <button class="tab-btn" data-tab="config" onclick="switchTab('config',this)">
+      <span class="tab-icon">⚙</span>Configurações
+    </button>
+  </nav>
+  <div class="hdr-user" id="hdr-user-section" style="display:none">
+    <div>
+      <div class="hdr-user-name" id="hdr-user-name"></div>
+      <div class="hdr-user-perfil" id="hdr-user-perfil"></div>
+    </div>
+    <button class="btn-logout" onclick="doLogout()">Sair</button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════ CONTENT ═══════════════════════════════ -->
+<main class="content">
+
+  <!-- ╔══════════════════════════════════════╗ -->
+  <!-- ║         TAB: ESTRUTURAÇÃO           ║ -->
+  <!-- ╚══════════════════════════════════════╝ -->
+  <div class="tab-panel active" id="tab-estruturacao">
+    <div class="split">
+
+      <!-- LEFT: CC TREE -->
+      <div>
+        <div class="stitle">Centros de Custo</div>
+        <div class="card mb16">
+          <div class="card-hdr">
+            <span class="card-title">Hierarquia de CCs</span>
+            <button class="btn btn-primary btn-sm" onclick="openCCForm()">+ Novo CC</button>
+          </div>
+          <div id="cc-tree"></div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: BUDGETS -->
+      <div>
+        <div class="stitle">Budgets Mensais</div>
+
+        <div class="card mb16">
+          <div class="card-hdr"><span class="card-title">Definir Budget</span></div>
+          <div class="card-body">
+            <div class="g2">
+              <div class="fg">
+                <label class="label">Centro de Custo</label>
+                <select class="fc" id="bud-cc"></select>
+              </div>
+              <div class="fg">
+                <label class="label">Mês / Ano</label>
+                <input type="month" class="fc" id="bud-mes">
+              </div>
+            </div>
+            <div class="fg">
+              <label class="label">Valor Previsto (R$)</label>
+              <input type="number" class="fc" id="bud-val" placeholder="0,00" min="0" step="0.01">
+            </div>
+            <button class="btn btn-primary" onclick="saveBudget()">Salvar Budget</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">Budgets Cadastrados</span>
+            <input type="month" class="fsel" id="bud-filter" onchange="renderBudgetList()" style="font-size:12px">
+          </div>
+          <div id="bud-list"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ╔══════════════════════════════════════╗ -->
+  <!-- ║         TAB: GERENCIAL              ║ -->
+  <!-- ╚══════════════════════════════════════╝ -->
+  <div class="tab-panel" id="tab-gerencial">
+    <div class="flex aic jcb mb20">
+      <div class="stitle" style="margin-bottom:0">Visão Gerencial — Previsto × Realizado</div>
+      <div class="flex aic gap10">
+        <span class="tmu">Período:</span>
+        <input type="month" class="fsel" id="ger-mes" onchange="renderGer()">
+        <button class="btn btn-ghost btn-sm" onclick="expandAll()" title="Expandir tudo">⊞ Expandir</button>
+        <button class="btn btn-ghost btn-sm" onclick="collapseAll()" title="Recolher tudo">⊟ Recolher</button>
+      </div>
+    </div>
+
+    <div class="sum-cards" id="ger-cards"></div>
+
+    <div class="card">
+      <div class="twrap" style="border:none">
+        <table class="ger-table">
+          <thead>
+            <tr>
+              <th>Centro de Custo</th>
+              <th class="tr">Previsto</th>
+              <th class="tr">Realizado</th>
+              <th class="tr">Saldo</th>
+              <th class="tr">% Utilizado</th>
+            </tr>
+          </thead>
+          <tbody id="ger-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ╔══════════════════════════════════════╗ -->
+  <!-- ║        TAB: ACOMPANHAMENTO          ║ -->
+  <!-- ╚══════════════════════════════════════╝ -->
+  <div class="tab-panel" id="tab-acomp">
+    <div class="flex aic jcb mb16">
+      <div class="stitle" style="margin-bottom:0">Acompanhamento de Ordens de Compra</div>
+      <button class="btn btn-primary" onclick="openOCModal()">✦ Nova OC</button>
+    </div>
+
+    <div class="filters">
+      <select class="fsel" id="fil-status" onchange="renderAcomp()">
+        <option value="">Todos os status</option>
+        <option value="pendente">Pendente</option>
+        <option value="em_negociacao">Em Negociação</option>
+        <option value="pedido">Pedido</option>
+        <option value="recebido">Recebido</option>
+        <option value="concluida">Concluída</option>
+      </select>
+      <select class="fsel" id="fil-cc" onchange="renderAcomp()">
+        <option value="">Todos os CCs</option>
+      </select>
+      <input type="month" class="fsel" id="fil-per" onchange="renderAcomp()" title="Mês da solicitação">
+      <input type="text" class="finput" id="fil-q" placeholder="🔍  Buscar OC, solicitante..." oninput="renderAcomp()">
+    </div>
+
+    <div class="twrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nº OC</th>
+            <th>Solicitação</th>
+            <th>Solicitante</th>
+            <th>Centro de Custo</th>
+            <th>Descrição</th>
+            <th class="tr">Valor Est.</th>
+            <th class="tr">Valor Fechado</th>
+            <th>Data Nec.</th>
+            <th>Fornecedores</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="acomp-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ╔══════════════════════════════════════╗ -->
+  <!-- ║       TAB: ACOMPANHAMENTO BI        ║ -->
+  <!-- ╚══════════════════════════════════════╝ -->
+  <div class="tab-panel" id="tab-bi">
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:420px;gap:24px;text-align:center">
+      <div style="position:relative;width:80px;height:80px">
+        <div style="
+          width:80px;height:80px;border-radius:50%;
+          border:3px solid var(--p200);
+          border-top-color:var(--p500);
+          animation:spin 1.2s linear infinite;
+        "></div>
+        <div style="
+          position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+          font-size:26px;
+        ">◉</div>
+      </div>
+      <div>
+        <div style="font-family:var(--fh);font-size:17px;font-weight:700;color:var(--text);margin-bottom:8px">
+          Em Desenvolvimento
+        </div>
+        <div style="font-size:13.5px;color:var(--text-muted);max-width:320px;line-height:1.6">
+          Aguardando comunicação com sistema <strong style="color:var(--p600)">ERIS</strong>
+        </div>
+      </div>
+      <div style="
+        background:var(--amber-bg);border:1px solid var(--amber-border);
+        color:#92400e;border-radius:var(--r);padding:10px 18px;font-size:12px;font-weight:500
+      ">
+        ⚠️ Integração pendente de configuração
+      </div>
+    </div>
+  </div>
+
+  <!-- ╔══════════════════════════════════════╗ -->
+  <!-- ║      TAB: ORDEM DE MANUTENÇÃO      ║ -->
+  <!-- ╚══════════════════════════════════════╝ -->
+  <div class="tab-panel" id="tab-manut">
+    <div class="flex aic jcb mb16">
+      <div class="stitle" style="margin-bottom:0">Ordens de Manutenção</div>
+      <button class="btn btn-primary" onclick="openOMModal()">🔧 Nova Ordem</button>
+    </div>
+    <div class="filters">
+      <select class="fsel" id="om-fil-status" onchange="renderManut()">
+        <option value="">Todos os status</option>
+        <option value="pendente">Pendente</option>
+        <option value="concluido">Concluído</option>
+      </select>
+      <select class="fsel" id="om-fil-pri" onchange="renderManut()">
+        <option value="">Todas as prioridades</option>
+        <option value="baixa">Baixa</option>
+        <option value="media">Média</option>
+        <option value="alta">Alta</option>
+        <option value="urgente">Urgente</option>
+      </select>
+      <input type="text" class="finput" id="om-fil-q" placeholder="🔍  Buscar por solicitante, local, problema..." oninput="renderManut()">
+    </div>
+    <div class="twrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nº OM</th>
+            <th>Data</th>
+            <th>Solicitante</th>
+            <th>Local</th>
+            <th>Problema</th>
+            <th>Prioridade</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="manut-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ╔══════════════════════════════════════╗ -->
+  <!-- ║         TAB: CONFIGURAÇÕES          ║ -->
+  <!-- ╚══════════════════════════════════════╝ -->
+  <div class="tab-panel" id="tab-config">
+    <div style="max-width:700px">
+
+      <div class="stitle">Backup &amp; Restauração</div>
+      <div class="card mb16">
+        <div class="card-body">
+          <p class="tmu" style="margin-bottom:14px">Exporte todos os dados do sistema em um arquivo JSON para guardar como backup. Para restaurar, importe um arquivo gerado anteriormente — os dados atuais serão substituídos.</p>
+          <div class="flex gap10">
+            <button class="btn btn-primary" onclick="backupData()">⬇ Exportar Backup</button>
+            <button class="btn btn-sec" onclick="document.getElementById('restore-input').click()">⬆ Restaurar Backup</button>
+          </div>
+          <input type="file" id="restore-input" accept=".json" style="display:none" onchange="restoreData(event)">
+        </div>
+      </div>
+
+      <div class="stitle">Gerenciamento de Usuários</div>
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Usuários cadastrados</span>
+          <button class="btn btn-primary btn-sm" onclick="openUserForm()">+ Novo Usuário</button>
+        </div>
+        <div id="user-list"></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ═══════════════════════════════ NOVA OC MODAL ═══════════════════════════════ -->
+<div class="overlay" id="oc-modal-overlay" onclick="handleOCOverlayClick(event)">
+  <div class="modal" id="oc-modal-box">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-hdr-oc">Nova Ordem de Compra</div>
+        <div class="modal-hdr-desc">Preencha os dados e adicione os itens necessários</div>
+      </div>
+      <button class="modal-close" onclick="closeOCModal()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="g2">
+        <div class="fg">
+          <label class="label">Solicitante</label>
+          <input type="text" class="fc" id="oc-sol" placeholder="Nome completo">
+        </div>
+        <div class="fg">
+          <label class="label">Setor</label>
+          <input type="text" class="fc" id="oc-setor" placeholder="Setor responsável">
+        </div>
+      </div>
+
+      <div class="fg">
+        <label class="label">Centro de Custo</label>
+        <select class="fc" id="oc-cc"></select>
+      </div>
+
+      <div class="fg">
+        <label class="label">Itens da Ordem de Compra</label>
+        <div class="oc-item-add">
+          <div class="g2" style="margin-bottom:10px">
+            <div class="fg" style="margin-bottom:0">
+              <label class="label">Descrição do Item / Serviço</label>
+              <input type="text" class="fc" id="oc-item-desc" placeholder="Descreva o item ou serviço...">
+            </div>
+            <div class="fg" style="margin-bottom:0">
+              <label class="label">Valor Estimado (R$)</label>
+              <input type="number" class="fc" id="oc-item-val" placeholder="0,00" min="0" step="0.01">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:flex-end">
+            <div class="fg" style="margin-bottom:0">
+              <label class="label">Quantidade</label>
+              <input type="number" class="fc" id="oc-item-qtd" placeholder="0" min="0.001" step="any">
+            </div>
+            <div class="fg" style="margin-bottom:0">
+              <label class="label">Unidade</label>
+              <select class="fc" id="oc-item-und">
+                <option value="un">un — Unidade</option>
+                <option value="kg">kg — Quilograma</option>
+                <option value="g">g — Grama</option>
+                <option value="L">L — Litro</option>
+                <option value="mL">mL — Mililitro</option>
+                <option value="cx">cx — Caixa</option>
+                <option value="pct">pct — Pacote</option>
+                <option value="m">m — Metro</option>
+                <option value="m²">m² — Metro quadrado</option>
+                <option value="sc">sc — Saco</option>
+                <option value="hr">hr — Hora</option>
+                <option value="sv">sv — Serviço</option>
+              </select>
+            </div>
+            <button type="button" class="btn btn-sec" onclick="addOCItem()">+ Adicionar</button>
+          </div>
+        </div>
+        <div id="oc-itens-list"></div>
+      </div>
+
+      <div class="fg">
+        <label class="label">Justificativa</label>
+        <textarea class="fc" id="oc-just" placeholder="Por que este item é necessário?"></textarea>
+      </div>
+
+      <div style="max-width:220px">
+        <div class="fg">
+          <label class="label">Data Necessidade</label>
+          <input type="date" class="fc" id="oc-dtnec">
+        </div>
+      </div>
+
+      <hr class="sep">
+
+      <div class="flex aic jcb">
+        <p class="tmu">Criada com status <strong style="color:var(--amber)">Pendente</strong> e número gerado automaticamente.</p>
+        <button class="btn btn-primary" onclick="saveOC()">✦ Criar Ordem de Compra</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ MODAL ═══════════════════════════════ -->
+<div class="overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal-box">
+
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-hdr-oc" id="m-num"></div>
+        <div class="modal-hdr-desc" id="m-desc"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- OC INFO -->
+      <div class="modal-section">
+        <div class="g4" id="m-info" style="grid-template-columns:1fr 1fr 1fr 1fr"></div>
+      </div>
+
+      <hr class="sep" style="margin-top:0">
+
+      <!-- ITENS & ORÇAMENTOS -->
+      <div class="modal-section">
+        <div class="modal-section-title"><span>📋</span> Itens &amp; Orçamentos por Fornecedor</div>
+        <div id="m-items-orcs"></div>
+      </div>
+
+      <hr class="sep" style="margin-top:0">
+
+      <!-- STATUS -->
+      <div class="modal-section">
+        <div class="modal-section-title"><span>🔄</span> Atualização de Status</div>
+        <div class="flow mb12" id="m-flow"></div>
+        <div class="flex aic gap10" id="m-status-actions"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- NOVA OM MODAL -->
+<div class="cc-overlay" id="om-overlay" onclick="if(event.target===this)closeOMModal()">
+  <div class="cc-modal" style="max-width:500px">
+    <div class="cc-modal-hdr">
+      <span class="cc-modal-title">Nova Ordem de Manutenção</span>
+      <button class="modal-close" onclick="closeOMModal()">✕</button>
+    </div>
+    <div class="cc-modal-body">
+      <div class="g2">
+        <div class="fg">
+          <label class="label">Solicitante</label>
+          <input type="text" class="fc" id="om-sol" placeholder="Nome completo">
+        </div>
+        <div class="fg">
+          <label class="label">Local / Setor</label>
+          <input type="text" class="fc" id="om-local" placeholder="ex: Laboratório, Produção...">
+        </div>
+      </div>
+      <div class="fg">
+        <label class="label">Descrição do Problema</label>
+        <textarea class="fc" id="om-prob" placeholder="Descreva o problema de manutenção..."></textarea>
+      </div>
+      <div class="fg" style="max-width:220px">
+        <label class="label">Nível de Prioridade</label>
+        <select class="fc" id="om-pri">
+          <option value="baixa">🟢 Baixa</option>
+          <option value="media">🟡 Média</option>
+          <option value="alta">🟠 Alta</option>
+          <option value="urgente">🔴 Urgente</option>
+        </select>
+      </div>
+      <div class="flex gap8" style="margin-top:4px">
+        <button class="btn btn-primary btn-sm" onclick="saveOM()">✔ Criar Ordem</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeOMModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- USER MODAL -->
+<div class="cc-overlay" id="user-overlay" onclick="if(event.target===this)closeUserForm()">
+  <div class="cc-modal" style="max-width:440px">
+    <div class="cc-modal-hdr">
+      <span class="cc-modal-title" id="user-ftitle">Novo Usuário</span>
+      <button class="modal-close" onclick="closeUserForm()">✕</button>
+    </div>
+    <div class="cc-modal-body">
+      <input type="hidden" id="user-eid">
+      <div class="fg">
+        <label class="label">Login (usuário)</label>
+        <input type="text" class="fc" id="user-login" placeholder="ex: joao.silva" autocomplete="off">
+      </div>
+      <div class="fg">
+        <label class="label">Senha</label>
+        <input type="password" class="fc" id="user-senha" placeholder="Mínimo 4 caracteres" autocomplete="new-password">
+      </div>
+      <div class="fg">
+        <label class="label">Perfil / Permissão</label>
+        <select class="fc" id="user-perfil">
+          <option value="gestao">Gestão — acesso total</option>
+          <option value="compras">Compras — sem Estruturação e Configurações</option>
+          <option value="estoque">Estoque — somente Ordens de Compra</option>
+          <option value="producao">Produção — somente visualizar / criar OC</option>
+        </select>
+      </div>
+      <div class="flex gap8" style="margin-top:4px">
+        <button class="btn btn-primary btn-sm" onclick="saveUser()">Salvar</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeUserForm()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CC MODAL -->
+<div class="cc-overlay" id="cc-overlay" onclick="handleCCOverlayClick(event)">
+  <div class="cc-modal">
+    <div class="cc-modal-hdr">
+      <span class="cc-modal-title" id="cc-ftitle">Novo Centro de Custo</span>
+      <button class="modal-close" onclick="closeCCForm()">✕</button>
+    </div>
+    <div class="cc-modal-body">
+      <input type="hidden" id="cc-eid">
+      <div class="g2">
+        <div class="fg">
+          <label class="label">Código</label>
+          <input type="text" class="fc" id="cc-cod" placeholder="ex: 1.2.3">
+        </div>
+        <div class="fg">
+          <label class="label">CC Pai</label>
+          <select class="fc" id="cc-pai"></select>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="label">Nome</label>
+        <input type="text" class="fc" id="cc-nome" placeholder="ex: Laboratório de Qualidade">
+      </div>
+      <div class="flex gap8" style="margin-top:4px">
+        <button class="btn btn-primary btn-sm" onclick="saveCC()">Salvar</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeCCForm()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════ SCRIPT ═══════════════════════════════ -->
+<script>
+'use strict';
+
+// ════════════════════════════════════════════════════════
+//  DATA LAYER
+// ════════════════════════════════════════════════════════
+const K = { cc:'ptc_cc', bud:'ptc_bud', oc:'ptc_oc', orc:'ptc_orc', users:'ptc_users', om:'ptc_om' };
+
+// ── Auth ──────────────────────────────────────────────
+let currentUser = null;
+
+const PERFIL_LABELS = { gestao:'Gestão', compras:'Compras', estoque:'Estoque', producao:'Produção' };
+const PERFIL_TABS   = {
+  gestao:  ['estruturacao','gerencial','acomp','bi','manut','config'],
+  compras: ['gerencial','acomp','bi','manut'],
+  estoque: ['acomp','manut'],
+  producao:['acomp','manut'],
+};
+const PERFIL_CLS = { gestao:'pb-gestao', compras:'pb-compras', estoque:'pb-estoque', producao:'pb-producao' };
+
+function canAccess(tab){ return currentUser ? (PERFIL_TABS[currentUser.perfil]||[]).includes(tab) : false; }
+function canManage()   { return currentUser && currentUser.perfil !== 'producao'; }
+const load  = k => { try { return JSON.parse(localStorage.getItem(k)) || []; } catch { return []; } };
+const store = (k,v) => localStorage.setItem(k, JSON.stringify(v));
+const uid   = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+
+// CCs
+const getCCs   = ()    => load(K.cc);
+const getCC    = id    => getCCs().find(c => c.id === id);
+const saveCC_  = cc    => { const a = getCCs(); const i = a.findIndex(c=>c.id===cc.id); i>=0?a[i]=cc:a.push(cc); store(K.cc,a); };
+const delCC_   = id    => store(K.cc, getCCs().filter(c=>c.id!==id));
+
+// Budgets
+const getBuds  = ()    => load(K.bud);
+const getBud   = (ccId,m,y) => getBuds().find(b=>b.cc_id===ccId&&b.mes==m&&b.ano==y);
+const saveBud_ = b     => { const a = getBuds(); const i = a.findIndex(x=>x.id===b.id); i>=0?a[i]=b:a.push(b); store(K.bud,a); };
+const delBud_  = id    => store(K.bud, getBuds().filter(b=>b.id!==id));
+
+// OCs
+const getOCs   = ()    => load(K.oc);
+const getOC    = num   => getOCs().find(o=>o.num===num);
+const saveOC_  = oc    => { const a = getOCs(); const i = a.findIndex(o=>o.num===oc.num); i>=0?a[i]=oc:a.push(oc); store(K.oc,a); };
+
+// Orçamentos
+const _NOITEM = {};
+const getOrcs  = (num, itemId = _NOITEM) => {
+  const base = load(K.orc).filter(o=>o.oc===num);
+  return itemId === _NOITEM ? base : base.filter(o=>(o.item_id??null)===(itemId??null));
+};
+const saveOrc_ = orc   => { const a = load(K.orc); const i = a.findIndex(x=>x.id===orc.id); i>=0?a[i]=orc:a.push(orc); store(K.orc,a); };
+const delOrc_  = id    => store(K.orc, load(K.orc).filter(o=>o.id!==id));
+const setWinner= (oc,orcId)=> {
+  const a = load(K.orc);
+  const target = a.find(x=>x.id===orcId); if(!target) return;
+  const iid = target.item_id ?? null;
+  a.forEach(o=>{ if(o.oc===oc && (o.item_id??null)===iid) o.winner=false; });
+  target.winner = true;
+  store(K.orc,a);
+};
+
+// OC number generator
+function genNum() {
+  const y = new Date().getFullYear();
+  const nums = getOCs().filter(o=>o.num.startsWith(`OC-${y}`)).map(o=>parseInt(o.num.split('-')[2])||0);
+  return `OC-${y}-${String(nums.length?Math.max(...nums)+1:1).padStart(4,'0')}`;
+}
+
+// ════════════════════════════════════════════════════════
+//  TREE & CALCULATIONS
+// ════════════════════════════════════════════════════════
+function buildTree(pid=null) {
+  return getCCs()
+    .filter(c=>c.pai===(pid||null))
+    .sort((a,b)=>a.cod.localeCompare(b.cod,undefined,{numeric:true}))
+    .map(c=>({...c,children:buildTree(c.id)}));
+}
+
+function flatCC(pid=null,pfx='') {
+  return getCCs()
+    .filter(c=>c.pai===(pid||null))
+    .sort((a,b)=>a.cod.localeCompare(b.cod,undefined,{numeric:true}))
+    .reduce((acc,c)=>{
+      acc.push({...c,label:pfx+c.cod+' — '+c.nome});
+      acc.push(...flatCC(c.id,pfx+'\u00a0\u00a0\u00a0\u00a0'));
+      return acc;
+    },[]);
+}
+
+function calcPrev(id,m,y){
+  const b = getBud(id,m,y);
+  let t = b ? b.val : 0;
+  getCCs().filter(c=>c.pai===id).forEach(c=>{ t+=calcPrev(c.id,m,y); });
+  return t;
+}
+
+function calcReal(id,m,y){
+  const ocs = getOCs().filter(o=>{
+    if(o.cc!==id) return false;
+    if(!['pedido','recebido'].includes(o.status)) return false;
+    if(!o.dtnec) return false;
+    const dt = new Date(o.dtnec+'T00:00:00');
+    return (dt.getMonth()+1)==m && dt.getFullYear()==y;
+  });
+  let t = ocs.reduce((s,o)=>{
+    if(o.itens && o.itens.length>0){
+      return s+o.itens.reduce((is,it)=>{
+        const w = getOrcs(o.num,it.id).find(x=>x.winner);
+        return is+(w?w.val:it.val);
+      },0);
+    }
+    const w = getOrcs(o.num).find(x=>x.winner);
+    return s+(w?w.val:o.val);
+  },0);
+  getCCs().filter(c=>c.pai===id).forEach(c=>{ t+=calcReal(c.id,m,y); });
+  return t;
+}
+
+// ════════════════════════════════════════════════════════
+//  FORMAT HELPERS
+// ════════════════════════════════════════════════════════
+const R$     = v => 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fDate  = d => { if(!d)return '—'; const dt=new Date(d+'T00:00:00'); return dt.toLocaleDateString('pt-BR'); };
+const fMY    = s => { if(!s)return ''; const[y,m]=s.split('-'); return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][m-1]+'/'+y; };
+
+const STATUS_LABELS = { pendente:'Pendente', em_negociacao:'Em Negociação', pedido:'Pedido', recebido:'Recebido', concluida:'Concluída' };
+const STATUS_NEXT   = { pendente:'em_negociacao', em_negociacao:'pedido', pedido:'recebido', recebido:'concluida' };
+const STATUS_ORDER  = ['pendente','em_negociacao','pedido','recebido','concluida'];
+
+function badge(s){
+  const cls={pendente:'b-pend',em_negociacao:'b-nego',pedido:'b-ped',recebido:'b-rec',concluida:'b-conc'};
+  return `<span class="badge ${cls[s]||''}">${STATUS_LABELS[s]||s}</span>`;
+}
+
+function indicator(pct){
+  const cap = Math.min(pct,100);
+  const cls  = pct>=100?'ir':pct>=80?'iy':'ig';
+  return `<span class="ind ${cls}"><span class="ind-dot"></span><span class="ind-bar"><span class="ind-fill" style="width:${cap}%"></span></span>${pct.toFixed(0)}%</span>`;
+}
+
+// ════════════════════════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════════════════════════
+let _tTimer;
+function toast(msg,type='info'){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className=`toast ${type} show`;
+  clearTimeout(_tTimer);
+  _tTimer=setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// ════════════════════════════════════════════════════════
+//  AUTH
+// ════════════════════════════════════════════════════════
+function doLogin(){
+  const login = document.getElementById('login-user').value.trim();
+  const senha = document.getElementById('login-pass').value;
+  if(!login||!senha){ toast('Preencha usuário e senha.','error'); return; }
+  const user = load(K.users).find(u=>u.login===login&&u.senha===senha);
+  if(!user){ toast('Usuário ou senha incorretos.','error'); return; }
+  currentUser = user;
+  document.getElementById('login-overlay').style.display='none';
+  document.getElementById('login-pass').value='';
+  afterLogin();
+}
+
+function doLogout(){
+  currentUser = null;
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('hdr-user-section').style.display='none';
+  document.getElementById('login-overlay').style.display='flex';
+}
+
+function afterLogin(){
+  // Show/hide tabs
+  document.querySelectorAll('.tab-btn[data-tab]').forEach(btn=>{
+    btn.style.display = canAccess(btn.dataset.tab) ? '' : 'none';
+  });
+  // User info in header
+  document.getElementById('hdr-user-name').textContent = currentUser.login;
+  document.getElementById('hdr-user-perfil').textContent = PERFIL_LABELS[currentUser.perfil];
+  document.getElementById('hdr-user-section').style.display='flex';
+  // Navigate to first accessible tab
+  const firstTab = PERFIL_TABS[currentUser.perfil]?.[0];
+  const firstBtn = document.querySelector(`.tab-btn[data-tab="${firstTab}"]`);
+  if(firstTab && firstBtn) switchTab(firstTab, firstBtn);
+}
+
+// ════════════════════════════════════════════════════════
+//  TAB SWITCHING
+// ════════════════════════════════════════════════════════
+function switchTab(tab,btn){
+  if(!canAccess(tab)){ toast('Acesso não permitido.','error'); return; }
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  btn.classList.add('active');
+  if(tab==='estruturacao') renderEst();
+  if(tab==='gerencial')    renderGer();
+  if(tab==='acomp')        renderAcomp();
+  if(tab==='manut')        renderManut();
+  if(tab==='config')       renderConfig();
+}
+
+// ════════════════════════════════════════════════════════
+//  ESTRUTURAÇÃO
+// ════════════════════════════════════════════════════════
+function renderEst(){
+  renderCCTree();
+  refreshCCSelects();
+  renderBudgetList();
+}
+
+function renderCCTree(){
+  const tree = buildTree();
+  const el = document.getElementById('cc-tree');
+  if(!tree.length){
+    el.innerHTML=`<div class="empty"><div class="empty-icon">🏗️</div><h3>Nenhum CC cadastrado</h3><p>Clique em "+ Novo CC" para começar.</p></div>`;
+    return;
+  }
+  el.innerHTML = renderCCNodes(tree,0);
+}
+
+function renderCCNodes(nodes,depth){
+  return nodes.map(n=>{
+    const pad = 14+depth*22;
+    const hasK = n.children.length>0;
+    const col  = ccCollapsed.has(n.id);
+    return `
+      <div class="tree-row" style="padding-left:${pad}px">
+        ${hasK
+          ? `<button class="tree-toggle" onclick="toggleCC('${n.id}')" title="${col?'Expandir':'Recolher'}">${col?'▶':'▼'}</button>`
+          : `<span class="leaf-dot">◇</span>`}
+        <span class="cc-code">${n.cod}</span>
+        <span class="cc-name">${n.nome}</span>
+        <div class="tree-acts">
+          <button class="btn btn-ghost btn-xs" onclick="openCCFormEdit('${n.id}')">✎</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteCC('${n.id}')">✕</button>
+        </div>
+      </div>
+      ${hasK && !col ? renderCCNodes(n.children,depth+1) : ''}
+    `;
+  }).join('');
+}
+
+function toggleCC(id){
+  ccCollapsed.has(id) ? ccCollapsed.delete(id) : ccCollapsed.add(id);
+  renderCCTree();
+}
+
+function refreshCCSelects(){
+  const flat = flatCC();
+  const opts = `<option value="">— Nenhum (raiz) —</option>`+flat.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+  document.getElementById('cc-pai').innerHTML = opts;
+  document.getElementById('bud-cc').innerHTML = `<option value="">Selecione...</option>`+flat.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+  // OC form CC select — only leaf nodes (CCs with no children)
+  const ocSel = document.getElementById('oc-cc');
+  if(ocSel){
+    const allCCs = getCCs();
+    const leafFlat = flat.filter(c => !allCCs.some(x => x.pai === c.id));
+    ocSel.innerHTML = `<option value="">Selecione o centro de custo...</option>`+leafFlat.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+  }
+  // Filter CC
+  const filCC = document.getElementById('fil-cc');
+  if(filCC){
+    const cur = filCC.value;
+    filCC.innerHTML = `<option value="">Todos os CCs</option>`+flat.map(c=>`<option value="${c.id}" ${c.id===cur?'selected':''}>${c.cod} — ${c.nome}</option>`).join('');
+  }
+}
+
+function openCCForm(){
+  document.getElementById('cc-ftitle').textContent='Novo Centro de Custo';
+  document.getElementById('cc-eid').value='';
+  document.getElementById('cc-cod').value='';
+  document.getElementById('cc-nome').value='';
+  const flat = flatCC();
+  document.getElementById('cc-pai').innerHTML=`<option value="">— Nenhum (raiz) —</option>`+flat.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');
+  document.getElementById('cc-overlay').classList.add('open');
+}
+
+function openCCFormEdit(id){
+  const c = getCC(id); if(!c) return;
+  document.getElementById('cc-ftitle').textContent='Editar Centro de Custo';
+  document.getElementById('cc-eid').value=c.id;
+  document.getElementById('cc-cod').value=c.cod;
+  document.getElementById('cc-nome').value=c.nome;
+  const flat = flatCC().filter(x=>x.id!==id);
+  document.getElementById('cc-pai').innerHTML=`<option value="">— Nenhum (raiz) —</option>`+flat.map(x=>`<option value="${x.id}" ${x.id===c.pai?'selected':''}>${x.label}</option>`).join('');
+  document.getElementById('cc-overlay').classList.add('open');
+}
+
+function closeCCForm(){ document.getElementById('cc-overlay').classList.remove('open'); }
+
+function handleCCOverlayClick(e){
+  if(e.target===document.getElementById('cc-overlay')) closeCCForm();
+}
+
+function saveCC(){
+  const id   = document.getElementById('cc-eid').value;
+  const cod  = document.getElementById('cc-cod').value.trim();
+  const nome = document.getElementById('cc-nome').value.trim();
+  const pai  = document.getElementById('cc-pai').value || null;
+  if(!cod||!nome){ toast('Preencha código e nome.','error'); return; }
+  saveCC_({id:id||uid(), cod, nome, pai});
+  closeCCForm();
+  toast('Centro de custo salvo!','success');
+  renderEst();
+}
+
+function deleteCC(id){
+  if(getCCs().some(c=>c.pai===id)){ toast('Remova os CCs filhos antes de excluir.','error'); return; }
+  if(getOCs().some(o=>o.cc===id)){ toast('CC possui OCs vinculadas. Não é possível excluir.','error'); return; }
+  delCC_(id);
+  toast('CC excluído.','success');
+  renderEst();
+}
+
+function saveBudget(){
+  const ccId = document.getElementById('bud-cc').value;
+  const mes  = document.getElementById('bud-mes').value;
+  const val  = parseFloat(document.getElementById('bud-val').value);
+  if(!ccId||!mes||isNaN(val)||val<0){ toast('Preencha todos os campos do budget.','error'); return; }
+  const [y,m] = mes.split('-').map(Number);
+  const ex = getBud(ccId,m,y);
+  saveBud_({id:ex?ex.id:uid(), cc_id:ccId, mes:m, ano:y, val});
+  toast('Budget salvo!','success');
+  document.getElementById('bud-val').value='';
+  renderBudgetList();
+}
+
+function renderBudgetList(){
+  const fmes = document.getElementById('bud-filter').value;
+  let buds = getBuds();
+  if(fmes){ const[y,m]=fmes.split('-').map(Number); buds=buds.filter(b=>b.mes==m&&b.ano==y); }
+  const el = document.getElementById('bud-list');
+  if(!buds.length){
+    el.innerHTML=`<div class="empty" style="padding:28px"><p>Nenhum budget${fmes?' neste período':''} cadastrado.</p></div>`;
+    return;
+  }
+  el.innerHTML = buds.map(b=>{
+    const cc = getCC(b.cc_id);
+    return `<div class="bud-row">
+      <span class="bud-code">${cc?cc.cod:'?'}</span>
+      <span class="bud-name">${cc?cc.nome:'—'}</span>
+      <span class="bud-per">${String(b.mes).padStart(2,'0')}/${b.ano}</span>
+      <span class="bud-val">${R$(b.val)}</span>
+      <button class="btn btn-danger btn-xs" onclick="delBud('${b.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function delBud(id){ delBud_(id); toast('Budget removido.','success'); renderBudgetList(); }
+
+// ════════════════════════════════════════════════════════
+//  GERENCIAL
+// ════════════════════════════════════════════════════════
+const expanded = new Set();
+
+function renderGer(){
+  let mes = document.getElementById('ger-mes').value;
+  if(!mes){
+    const n=new Date();
+    mes=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
+    document.getElementById('ger-mes').value=mes;
+  }
+  const [y,m] = mes.split('-').map(Number);
+  const tree = buildTree();
+
+  const totPrev = tree.reduce((s,n)=>s+calcPrev(n.id,m,y),0);
+  const totReal = tree.reduce((s,n)=>s+calcReal(n.id,m,y),0);
+  const totSald = totPrev - totReal;
+
+  document.getElementById('ger-cards').innerHTML=`
+    <div class="sum-card prev">
+      <div class="sum-lbl">Total Previsto</div>
+      <div class="sum-val" style="color:var(--p700)">${R$(totPrev)}</div>
+      <div class="sum-sub">${fMY(mes)}</div>
+    </div>
+    <div class="sum-card real">
+      <div class="sum-lbl">Total Realizado</div>
+      <div class="sum-val" style="color:var(--b600)">${R$(totReal)}</div>
+      <div class="sum-sub">OCs Pedido + Recebido</div>
+    </div>
+    <div class="sum-card sald ${totSald<0?'neg':''}">
+      <div class="sum-lbl">Saldo Disponível</div>
+      <div class="sum-val" style="color:${totSald<0?'var(--red)':'var(--green)'}">${R$(totSald)}</div>
+      <div class="sum-sub">${totSald<0?'⚠ Orçamento estourado':'✓ Dentro do orçamento'}</div>
+    </div>
+  `;
+
+  let rows='';
+  if(!tree.length){
+    rows=`<tr><td colspan="5"><div class="empty"><p>Nenhum centro de custo cadastrado.</p></div></td></tr>`;
+  } else {
+    tree.forEach(n=>{ rows+=gerRow(n,m,y,0); });
+  }
+  document.getElementById('ger-tbody').innerHTML=rows;
+}
+
+function gerRow(n,m,y,depth){
+  const prev = calcPrev(n.id,m,y);
+  const real = calcReal(n.id,m,y);
+  const sald = prev - real;
+  const pct  = prev>0?(real/prev*100):0;
+  const hasK = n.children.length>0;
+  const isEx = expanded.has(n.id);
+  const pad  = depth*26;
+
+  let html = `
+    <tr class="ger-d${Math.min(depth,3)} ${hasK?'has-children':''}" ${hasK?`onclick="toggleGer('${n.id}')"`:''}">
+      <td>
+        <div class="flex aic gap8" style="padding-left:${pad}px">
+          ${hasK
+            ? `<button class="expand-btn" style="pointer-events:none">${isEx?'▾':'▸'}</button>`
+            : `<span style="display:inline-block;width:18px;height:18px;text-align:center;color:var(--gray-300);font-size:10px;flex-shrink:0">·</span>`}
+          <span style="color:var(--p600);font-weight:700;font-size:11px;min-width:46px">${n.cod}</span>
+          <span>${n.nome}</span>
+        </div>
+      </td>
+      <td class="num">${prev>0?R$(prev):`<span style="color:var(--gray-300)">—</span>`}</td>
+      <td class="num">${real>0?R$(real):`<span style="color:var(--gray-300)">—</span>`}</td>
+      <td class="num" style="color:${prev===0&&real===0?'var(--gray-300)':sald<0?'var(--red)':'var(--green)'};font-weight:600">
+        ${prev>0||real>0?R$(sald):'—'}
+      </td>
+      <td class="num">${prev>0?indicator(pct):`<span style="color:var(--gray-300)">—</span>`}</td>
+    </tr>`;
+
+  if(hasK && isEx){
+    n.children.forEach(c=>{ html+=gerRow(c,m,y,depth+1); });
+  }
+  return html;
+}
+
+function toggleGer(id){
+  expanded.has(id)?expanded.delete(id):expanded.add(id);
+  renderGer();
+}
+
+function expandAll(){
+  getCCs().forEach(c=>expanded.add(c.id));
+  renderGer();
+}
+
+function collapseAll(){
+  expanded.clear();
+  renderGer();
+}
+
+// ════════════════════════════════════════════════════════
+//  ORDEM DE COMPRA
+// ════════════════════════════════════════════════════════
+function openOCModal(){
+  refreshCCSelects();
+  ocItens = [];
+  renderOCItemList();
+  ['oc-sol','oc-setor','oc-just'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  const ccEl = document.getElementById('oc-cc'); if(ccEl) ccEl.value='';
+  const d = new Date(); d.setDate(d.getDate()+7);
+  document.getElementById('oc-dtnec').value = d.toISOString().split('T')[0];
+  document.getElementById('oc-modal-overlay').classList.add('open');
+}
+
+function closeOCModal(){
+  document.getElementById('oc-modal-overlay').classList.remove('open');
+}
+
+function handleOCOverlayClick(e){
+  if(e.target===document.getElementById('oc-modal-overlay')) closeOCModal();
+}
+
+function renderOCItemList(){
+  const container = document.getElementById('oc-itens-list');
+  if(!container) return;
+  if(!ocItens.length){
+    container.innerHTML = `<div style="text-align:center;padding:14px;color:var(--gray-400);font-size:12.5px;border:1px dashed var(--gray-300);border-radius:var(--r)">Nenhum item adicionado. Preencha os campos acima e clique em <strong>+ Adicionar</strong>.</div>`;
+    return;
+  }
+  const total = ocItens.reduce((s,i)=>s+i.val,0);
+  container.innerHTML = `
+    <div class="twrap">
+      <table class="oc-itens-table">
+        <thead><tr>
+          <th style="width:30px">#</th>
+          <th>Descrição</th>
+          <th class="tr" style="width:70px">Qtd</th>
+          <th style="width:55px">Und</th>
+          <th class="tr" style="width:120px">Valor Est.</th>
+          <th style="width:36px"></th>
+        </tr></thead>
+        <tbody>
+          ${ocItens.map((it,i)=>`<tr>
+            <td style="color:var(--text-muted);font-size:11px">${i+1}</td>
+            <td>${it.desc}</td>
+            <td class="tr">${it.qtd}</td>
+            <td>${it.und}</td>
+            <td class="tr" style="font-weight:600;color:var(--p700)">${R$(it.val)}</td>
+            <td><button class="btn btn-danger btn-xs" onclick="removeOCItem(${i})">✕</button></td>
+          </tr>`).join('')}
+          <tr class="oc-itens-total">
+            <td colspan="4" style="font-size:12px;color:var(--p800);text-align:right;padding-right:10px">Total Estimado</td>
+            <td class="tr" style="color:var(--p700)">${R$(total)}</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function addOCItem(){
+  const desc = document.getElementById('oc-item-desc').value.trim();
+  const qtd  = parseFloat(document.getElementById('oc-item-qtd').value);
+  const und  = document.getElementById('oc-item-und').value;
+  const val  = parseFloat(document.getElementById('oc-item-val').value);
+  if(!desc || isNaN(qtd) || qtd<=0 || isNaN(val) || val<=0){
+    toast('Preencha descrição, quantidade e valor do item.','error'); return;
+  }
+  ocItens.push({id: uid(), desc, qtd, und, val});
+  document.getElementById('oc-item-desc').value='';
+  document.getElementById('oc-item-qtd').value='';
+  document.getElementById('oc-item-val').value='';
+  renderOCItemList();
+}
+
+function removeOCItem(idx){
+  ocItens.splice(idx,1);
+  renderOCItemList();
+}
+
+function saveOC(){
+  const sol  = document.getElementById('oc-sol').value.trim();
+  const set  = document.getElementById('oc-setor').value.trim();
+  const cc   = document.getElementById('oc-cc').value;
+  const just = document.getElementById('oc-just').value.trim();
+  const dtnec= document.getElementById('oc-dtnec').value;
+
+  if(!sol||!set||!cc||!dtnec){
+    toast('Preencha todos os campos obrigatórios.','error'); return;
+  }
+  if(!ocItens.length){
+    toast('Adicione ao menos um item à ordem de compra.','error'); return;
+  }
+
+  const val  = ocItens.reduce((s,i)=>s+i.val,0);
+  const desc = ocItens.length===1
+    ? ocItens[0].desc
+    : `${ocItens[0].desc} (+${ocItens.length-1})`;
+
+  const oc = {
+    num:genNum(), dtcr:new Date().toISOString().split('T')[0],
+    sol, setor:set, cc, itens:ocItens.slice(), desc, val, just, dtnec,
+    status:'pendente', dtatual:new Date().toISOString()
+  };
+  saveOC_(oc);
+  closeOCModal();
+  toast(`${oc.num} criada com sucesso!`,'success');
+  renderAcomp();
+}
+
+// ════════════════════════════════════════════════════════
+//  ACOMPANHAMENTO
+// ════════════════════════════════════════════════════════
+function getOCWonVal(oc){
+  if(oc.itens && oc.itens.length > 0){
+    return oc.itens.reduce((s,it)=>{
+      const w = getOrcs(oc.num, it.id).find(x=>x.winner);
+      return s + (w ? w.val : 0);
+    }, 0);
+  }
+  const w = getOrcs(oc.num).find(x=>x.winner);
+  return w ? w.val : 0;
+}
+function renderAcomp(){
+  refreshCCSelects();
+  const fSt  = document.getElementById('fil-status').value;
+  const fCC  = document.getElementById('fil-cc').value;
+  const fPer = document.getElementById('fil-per').value;
+  const fQ   = document.getElementById('fil-q').value.toLowerCase();
+
+  let ocs = getOCs().sort((a,b)=>b.num.localeCompare(a.num));
+
+  if(fSt)  ocs = ocs.filter(o=>o.status===fSt);
+  if(fCC)  ocs = ocs.filter(o=>o.cc===fCC);
+  if(fPer){ const[y,m]=fPer.split('-').map(Number); ocs=ocs.filter(o=>{ const dt=new Date(o.dtcr+'T00:00:00'); return (dt.getMonth()+1)==m&&dt.getFullYear()==y; }); }
+  if(fQ)   ocs = ocs.filter(o=>{
+    const parts = [o.num,o.sol,o.desc,o.setor];
+    if(o.itens) o.itens.forEach(i=>parts.push(i.desc));
+    return parts.join(' ').toLowerCase().includes(fQ);
+  });
+
+  const tbody = document.getElementById('acomp-tbody');
+  if(!ocs.length){
+    tbody.innerHTML=`<tr><td colspan="11"><div class="empty"><div class="empty-icon">📦</div><h3>Nenhuma OC encontrada</h3><p>Ajuste os filtros ou crie uma nova Ordem de Compra.</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = ocs.map(o=>{
+    const cc = getCC(o.cc);
+    const allOrcs = getOrcs(o.num);
+    let orcIndicator;
+    if(o.itens && o.itens.length>0){
+      const won = o.itens.filter(it=>allOrcs.some(x=>x.item_id===it.id&&x.winner)).length;
+      orcIndicator = won>0
+        ? `<span style="background:var(--p600);color:white;border-radius:10px;padding:2px 7px;font-size:10px;font-weight:700">${won}/${o.itens.length} itens</span>`
+        : `<span style="color:var(--gray-300);font-size:11px">sem seleção</span>`;
+    } else {
+      orcIndicator = allOrcs.length>0
+        ? `<span style="background:var(--p600);color:white;border-radius:10px;padding:2px 7px;font-size:10px;font-weight:700">${allOrcs.length}/3</span>`
+        : `<span style="color:var(--gray-300);font-size:11px">0/3</span>`;
+    }
+    return `<tr>
+      <td><span style="font-family:var(--fh);font-weight:700;color:var(--p700)">${o.num}</span></td>
+      <td style="white-space:nowrap">${fDate(o.dtcr)}</td>
+      <td>${o.sol}</td>
+      <td>
+        <span style="color:var(--p600);font-weight:700;font-size:11px">${cc?cc.cod:'?'}</span>
+        <span style="color:var(--text-muted)"> ${cc?cc.nome:'—'}</span>
+      </td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${o.itens?o.itens.map((it,i)=>`${i+1}. ${it.desc}`).join('\n'):o.desc}">${o.desc}</td>
+      <td class="tr" style="white-space:nowrap">${R$(o.itens?o.itens.reduce((s,i)=>s+i.val,0):o.val)}</td>
+      <td class="tr" style="white-space:nowrap">${(()=>{const w=getOCWonVal(o);return w>0?`<span style="color:var(--green);font-weight:600">${R$(w)}</span>`:`<span style="color:var(--gray-300)">—</span>`;})()}</td>
+      <td style="white-space:nowrap">${fDate(o.dtnec)}</td>
+      <td>${orcIndicator}</td>
+      <td>
+        ${badge(o.status)}
+        ${o.dt_pedido?`<div style="font-size:10px;color:var(--text-muted);margin-top:3px">Pedido: ${fDate(o.dt_pedido)}</div>`:''}
+      </td>
+      <td>
+        <div class="flex gap6">
+          <button class="btn btn-sec btn-sm" onclick="openModal('${o.num}')">Gerenciar</button>
+          ${canManage()?`<button class="btn btn-danger btn-sm" onclick="deleteOC('${o.num}')">✕</button>`:''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════
+//  MODAL
+// ════════════════════════════════════════════════════════
+let curOC = null;
+let curOrcItemId = null;
+let ocItens = [];
+const ccCollapsed = new Set();
+
+function openModal(num){
+  curOC = num;
+  curOrcItemId = null;
+  renderModal();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('open');
+  curOC = null; curOrcItemId = null;
+}
+
+function handleOverlayClick(e){
+  if(e.target===document.getElementById('modal-overlay')) closeModal();
+}
+
+function buildOrcRow(orc, idx, canEdit){
+  return `
+    <tr class="${orc.winner?'orc-tr-winner':''}">
+      <td style="color:var(--text-muted);font-size:11px;white-space:nowrap">
+        ${idx+1}${orc.winner?` <span class="item-orc-winner" style="font-size:9px;padding:1px 5px">✓</span>`:''}
+      </td>
+      <td>
+        <div style="font-weight:600">${orc.forn}</div>
+        ${orc.cont?`<div style="font-size:11px;color:var(--text-muted)">${orc.cont}</div>`:''}
+      </td>
+      <td style="text-align:right;white-space:nowrap;font-weight:${orc.winner?'700':'400'};color:${orc.winner?'var(--green)':'inherit'}">${R$(orc.val)}</td>
+      <td style="white-space:nowrap;color:var(--text-muted)">${orc.prazo?fDate(orc.prazo):'—'}</td>
+      <td style="color:var(--text-muted)">${orc.cond||'—'}</td>
+      <td style="white-space:nowrap">
+        ${!orc.winner&&canEdit?`<button class="btn btn-success btn-xs" onclick="selectW('${orc.id}')">✓ Escolher</button> `:''}
+        ${orc.winner?`<span style="font-size:11px;color:var(--green);font-weight:600">✓ Escolhido</span> `:''}
+        ${canEdit?`<button class="btn btn-danger btn-xs" onclick="rmOrc('${orc.id}')">✕</button>`:''}
+      </td>
+    </tr>`;
+}
+
+function buildAddOrcRow(){
+  return `
+    <tr class="orc-add-tr">
+      <td style="color:var(--text-muted);font-size:11px">novo</td>
+      <td>
+        <input type="text" class="fc" id="orc-forn" placeholder="Fornecedor *" style="margin-bottom:4px">
+        <input type="text" class="fc" id="orc-cont" placeholder="Contato (tel / e-mail)">
+      </td>
+      <td><input type="number" class="fc" id="orc-val" placeholder="0,00" min="0" step="0.01"></td>
+      <td><input type="date" class="fc" id="orc-prazo"></td>
+      <td><input type="text" class="fc" id="orc-cond" placeholder="ex: 30 dias"></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-primary btn-xs" onclick="saveOrcamento()">✓ Salvar</button>
+        <button class="btn btn-ghost btn-xs" onclick="cancelOrcForm()">✕</button>
+      </td>
+    </tr>`;
+}
+
+function renderModal(){
+  const oc = getOC(curOC); if(!oc) return;
+  const cc = getCC(oc.cc);
+
+  document.getElementById('m-num').textContent  = oc.num;
+  document.getElementById('m-desc').textContent = oc.desc;
+
+  const infoItem = (label,val,style='') =>
+    `<div><div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">${label}</div><div style="font-size:13px;font-weight:500;${style}">${val}</div></div>`;
+
+  const hasItens = oc.itens && oc.itens.length > 0;
+  const totalVal = hasItens ? oc.itens.reduce((s,i)=>s+i.val,0) : (oc.val||0);
+
+  document.getElementById('m-info').innerHTML = `
+    ${infoItem('Solicitante',oc.sol)}
+    ${infoItem('Setor',oc.setor)}
+    ${infoItem('Centro de Custo',cc?`<b style="color:var(--p600)">${cc.cod}</b> ${cc.nome}`:'—')}
+    ${infoItem('Valor Total Estimado',R$(totalVal),'color:var(--p700);font-weight:700')}
+    ${hasItens ? infoItem('Qtd de Itens',`${oc.itens.length} item(s)`) : infoItem('Qtd / Unidade',`${oc.qtd} ${oc.und}`)}
+    ${infoItem('Data Solicitação',fDate(oc.dtcr))}
+    ${infoItem('Data Necessidade',fDate(oc.dtnec),'color:var(--b600);font-weight:600')}
+    ${infoItem('Status', badge(oc.status) + (oc.dt_pedido ? `<div style="font-size:10.5px;color:var(--text-muted);margin-top:4px">Pedido em ${fDate(oc.dt_pedido)}</div>` : ''))}
+  `;
+
+  // Items & per-item quotations
+  const canEdit = !['pedido','recebido','concluida'].includes(oc.status) && canManage();
+  const mIO = document.getElementById('m-items-orcs');
+
+  const orcTable = (rows) => `
+    <div class="twrap" style="border-radius:var(--r)">
+      <table class="orc-table">
+        <thead><tr>
+          <th style="width:28px">#</th>
+          <th>Fornecedor</th>
+          <th style="text-align:right;width:100px">Valor</th>
+          <th style="width:95px">Entrega</th>
+          <th style="width:120px">Cond. Pgto</th>
+          <th style="width:105px">Ações</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+
+  if(hasItens){
+    mIO.innerHTML = oc.itens.map((it,idx)=>{
+      const itemOrcs = getOrcs(oc.num, it.id);
+      const winner   = itemOrcs.find(x=>x.winner);
+      const showForm = curOrcItemId === it.id;
+      let rows = itemOrcs.map((orc,i)=>buildOrcRow(orc,i,canEdit)).join('');
+      if(showForm) rows += buildAddOrcRow();
+      const addBtn = (itemOrcs.length<3 && canEdit && !showForm)
+        ? `<button class="btn btn-sec btn-sm" style="margin-top:8px" onclick="showItemOrcForm('${it.id}')">+ Adicionar Orçamento</button>`
+        : '';
+      return `
+        <div class="item-orc-block">
+          <div class="item-orc-hdr">
+            <div class="item-orc-num">${idx+1}</div>
+            <div class="item-orc-desc">${it.desc}</div>
+            <div class="item-orc-meta">${it.qtd} ${it.und} · Ref: ${R$(it.val)}</div>
+            ${winner?`<span class="item-orc-winner">✓ ${winner.forn}</span>`:''}
+          </div>
+          <div class="item-orc-body">
+            ${orcTable(rows)}
+            ${addBtn}
+          </div>
+        </div>`;
+    }).join('');
+  } else {
+    const orcs = getOrcs(oc.num);
+    const showForm = curOrcItemId === '__legacy__';
+    let rows = orcs.map((orc,i)=>buildOrcRow(orc,i,canEdit)).join('');
+    if(showForm) rows += buildAddOrcRow();
+    const addBtn = (orcs.length<3 && canEdit && !showForm)
+      ? `<button class="btn btn-sec btn-sm" style="margin-top:8px" onclick="showItemOrcForm('__legacy__')">+ Adicionar Orçamento</button>`
+      : '';
+    mIO.innerHTML = orcTable(rows) + addBtn;
+  }
+
+  // Status flow
+  const curIdx = STATUS_ORDER.indexOf(oc.status);
+  document.getElementById('m-flow').innerHTML = STATUS_ORDER.map((s,i)=>{
+    const done = i<curIdx, active = i===curIdx;
+    return `${i>0?'<span class="flow-arr">→</span>':''}
+      <div class="flow-step">
+        <div class="flow-dot ${done?'done':active?'active':''}"></div>
+        <span class="flow-lbl ${done?'done':active?'active':''}">${STATUS_LABELS[s]}</span>
+      </div>`;
+  }).join('');
+
+  // Status — select livre (qualquer direção); bloqueado para Produção
+  const statusDis = !canManage();
+  document.getElementById('m-status-actions').innerHTML = statusDis
+    ? `<span class="label" style="margin:0">Status</span>${badge(oc.status)}`
+    : `<span class="label" style="margin:0;white-space:nowrap">Status</span>
+       <select class="fc" style="max-width:240px;font-weight:600;cursor:pointer"
+               onchange="advStatus('${oc.num}', this.value)">
+         ${STATUS_ORDER.map(s=>`<option value="${s}" ${s===oc.status?'selected':''}>${STATUS_LABELS[s]}</option>`).join('')}
+       </select>`;
+}
+
+function showItemOrcForm(itemId){
+  curOrcItemId = itemId;
+  renderModal();
+}
+
+function cancelOrcForm(){
+  curOrcItemId = null;
+  renderModal();
+}
+
+function saveOrcamento(){
+  const forn  = document.getElementById('orc-forn').value.trim();
+  const cont  = document.getElementById('orc-cont').value.trim();
+  const val   = parseFloat(document.getElementById('orc-val').value);
+  const prazo = document.getElementById('orc-prazo').value;
+  const cond  = document.getElementById('orc-cond').value.trim();
+
+  if(!forn||isNaN(val)||val<=0){ toast('Preencha ao menos fornecedor e valor.','error'); return; }
+
+  const itemId = (curOrcItemId === '__legacy__') ? null : curOrcItemId;
+  if(getOrcs(curOC, itemId).length>=3){ toast('Já existem 3 orçamentos para este item.','error'); return; }
+
+  saveOrc_({id:uid(), oc:curOC, item_id:itemId, forn, cont, val, prazo, cond, winner:false});
+  toast('Orçamento salvo!','success');
+  curOrcItemId = null;
+  renderModal();
+  renderAcomp();
+}
+
+function selectW(orcId){
+  setWinner(curOC, orcId);
+  toast('Fornecedor selecionado!','success');
+  renderModal();
+  renderAcomp();
+}
+
+function rmOrc(orcId){
+  delOrc_(orcId);
+  toast('Orçamento removido.','info');
+  renderModal();
+  renderAcomp();
+}
+
+function deleteOC(num){
+  if(!confirm(`Excluir a OC ${num}?\n\nEsta ação removerá todos os orçamentos associados e não poderá ser desfeita.`)) return;
+  store(K.oc, getOCs().filter(o=>o.num!==num));
+  store(K.orc, load(K.orc).filter(o=>o.oc!==num));
+  if(curOC === num) closeModal();
+  toast(`OC ${num} excluída.`,'info');
+  renderAcomp();
+}
+
+function advStatus(num, next){
+  const oc = getOC(num); if(!oc || oc.status===next) return;
+  oc.status = next;
+  oc.dtatual = new Date().toISOString();
+  if(next === 'pedido') oc.dt_pedido = new Date().toISOString().split('T')[0];
+  saveOC_(oc);
+  toast(`Status: ${STATUS_LABELS[next]}`, 'success');
+  renderModal();
+  renderAcomp();
+}
+
+// ════════════════════════════════════════════════════════
+//  ORDEM DE MANUTENÇÃO
+// ════════════════════════════════════════════════════════
+const getOMs   = ()  => load(K.om);
+const getOM    = id  => getOMs().find(o=>o.id===id);
+const saveOM_  = om  => { const a=getOMs(); const i=a.findIndex(x=>x.id===om.id); i>=0?a[i]=om:a.push(om); store(K.om,a); };
+const delOM_   = id  => store(K.om, getOMs().filter(o=>o.id!==id));
+
+function genOMNum(){
+  const y = new Date().getFullYear();
+  const nums = getOMs().filter(o=>o.num.startsWith(`OM-${y}`)).map(o=>parseInt(o.num.split('-')[2])||0);
+  return `OM-${y}-${String(nums.length?Math.max(...nums)+1:1).padStart(4,'0')}`;
+}
+
+const canChangeOMStatus = () => currentUser && ['gestao','compras'].includes(currentUser.perfil);
+const canDeleteOM       = () => currentUser && currentUser.perfil === 'gestao';
+
+const PRI_LABELS = { baixa:'Baixa', media:'Média', alta:'Alta', urgente:'Urgente' };
+const PRI_CLS    = { baixa:'pr-baixa', media:'pr-media', alta:'pr-alta', urgente:'pr-urgente' };
+const PRI_ICON   = { baixa:'🟢', media:'🟡', alta:'🟠', urgente:'🔴' };
+
+function priBadge(p){
+  return `<span class="badge ${PRI_CLS[p]||''}">${PRI_ICON[p]||''} ${PRI_LABELS[p]||p}</span>`;
+}
+
+function renderManut(){
+  const fSt = document.getElementById('om-fil-status').value;
+  const fPr = document.getElementById('om-fil-pri').value;
+  const fQ  = document.getElementById('om-fil-q').value.toLowerCase();
+
+  let oms = getOMs().sort((a,b)=>b.num.localeCompare(a.num));
+  if(fSt) oms = oms.filter(o=>o.status===fSt);
+  if(fPr) oms = oms.filter(o=>o.prioridade===fPr);
+  if(fQ)  oms = oms.filter(o=>[o.num,o.sol,o.local,o.problema].join(' ').toLowerCase().includes(fQ));
+
+  const tbody = document.getElementById('manut-tbody');
+  if(!oms.length){
+    tbody.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">🔧</div><h3>Nenhuma ordem encontrada</h3><p>Ajuste os filtros ou crie uma nova Ordem de Manutenção.</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = oms.map(o=>{
+    const statusHtml = canChangeOMStatus()
+      ? `<select class="om-status-sel om-${o.status}" onchange="changeOMStatus('${o.id}',this.value)">
+           <option value="pendente" ${o.status==='pendente'?'selected':''}>Pendente</option>
+           <option value="concluido" ${o.status==='concluido'?'selected':''}>Concluído</option>
+         </select>`
+      : `<span class="badge ${o.status==='concluido'?'b-rec':'b-pend'}">${o.status==='concluido'?'Concluído':'Pendente'}</span>`;
+
+    return `<tr>
+      <td><span style="font-family:var(--fh);font-weight:700;color:var(--p700)">${o.num}</span></td>
+      <td style="white-space:nowrap">${fDate(o.dtcr)}</td>
+      <td>${o.sol}</td>
+      <td>${o.local}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${o.problema}">${o.problema}</td>
+      <td>${priBadge(o.prioridade)}</td>
+      <td>${statusHtml}</td>
+      <td>${canDeleteOM()?`<button class="btn btn-danger btn-sm" onclick="deleteOM('${o.id}')">✕</button>`:''}</td>
+    </tr>`;
+  }).join('');
+}
+
+function openOMModal(){
+  ['om-sol','om-local','om-prob'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('om-pri').value='media';
+  document.getElementById('om-overlay').classList.add('open');
+}
+
+function closeOMModal(){ document.getElementById('om-overlay').classList.remove('open'); }
+
+function saveOM(){
+  const sol  = document.getElementById('om-sol').value.trim();
+  const local= document.getElementById('om-local').value.trim();
+  const prob = document.getElementById('om-prob').value.trim();
+  const pri  = document.getElementById('om-pri').value;
+  if(!sol||!local||!prob){ toast('Preencha todos os campos.','error'); return; }
+  saveOM_({ id:uid(), num:genOMNum(), dtcr:new Date().toISOString().split('T')[0],
+            sol, local, problema:prob, prioridade:pri, status:'pendente',
+            dtatual:new Date().toISOString() });
+  closeOMModal();
+  toast('Ordem de Manutenção criada!','success');
+  renderManut();
+}
+
+function changeOMStatus(id, newStatus){
+  const om = getOM(id); if(!om) return;
+  om.status = newStatus; om.dtatual = new Date().toISOString();
+  saveOM_(om);
+  toast(`Status: ${newStatus==='concluido'?'Concluído':'Pendente'}`, 'success');
+  renderManut();
+}
+
+function deleteOM(id){
+  if(!confirm('Excluir esta Ordem de Manutenção?')) return;
+  delOM_(id);
+  toast('Ordem removida.','info');
+  renderManut();
+}
+
+// ════════════════════════════════════════════════════════
+//  BACKUP & RESTAURAÇÃO
+// ════════════════════════════════════════════════════════
+function backupData(){
+  const payload = {
+    _meta: { version: SEED_V, exportedAt: new Date().toISOString(), app: 'PackForYou' },
+    cc:    load(K.cc),
+    bud:   load(K.bud),
+    oc:    load(K.oc),
+    orc:   load(K.orc),
+    om:    load(K.om),
+    users: load(K.users),
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const date = new Date().toISOString().split('T')[0];
+  a.href = url; a.download = `packforyou_backup_${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Backup exportado com sucesso!', 'success');
+}
+
+function restoreData(event){
+  const file = event.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if(!data._meta || data._meta.app !== 'PackForYou'){
+        toast('Arquivo inválido — não é um backup do Pack For You.', 'error'); return;
+      }
+      if(!confirm(`Restaurar backup de ${new Date(data._meta.exportedAt).toLocaleString('pt-BR')}?\n\nTodos os dados atuais serão substituídos. Esta ação não pode ser desfeita.`)){
+        event.target.value = ''; return;
+      }
+      if(data.cc)    store(K.cc,    data.cc);
+      if(data.bud)   store(K.bud,   data.bud);
+      if(data.oc)    store(K.oc,    data.oc);
+      if(data.orc)   store(K.orc,   data.orc);
+      if(data.om)    store(K.om,    data.om);
+      if(data.users) store(K.users, data.users);
+      localStorage.setItem('ptc_seed_v', data._meta.version || SEED_V);
+      toast('Backup restaurado! Recarregando...', 'success');
+      setTimeout(()=>location.reload(), 1500);
+    } catch {
+      toast('Erro ao ler o arquivo. Verifique se é um JSON válido.', 'error');
+    } finally {
+      event.target.value = '';
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ════════════════════════════════════════════════════════
+//  CONFIGURAÇÕES — USUÁRIOS
+// ════════════════════════════════════════════════════════
+function renderConfig(){
+  const users = load(K.users);
+  const el = document.getElementById('user-list');
+  if(!users.length){
+    el.innerHTML=`<div class="empty" style="padding:28px"><p>Nenhum usuário cadastrado.</p></div>`;
+    return;
+  }
+  el.innerHTML = users.map(u=>`
+    <div class="user-row">
+      <span style="font-family:var(--fh);font-weight:700;min-width:130px">${u.login}</span>
+      <span class="perfil-badge ${PERFIL_CLS[u.perfil]||''}">${PERFIL_LABELS[u.perfil]||u.perfil}</span>
+      <span style="flex:1"></span>
+      <button class="btn btn-ghost btn-xs" onclick="openUserFormEdit('${u.id}')">✎ Editar</button>
+      <button class="btn btn-danger btn-xs" onclick="deleteUser('${u.id}')">✕</button>
+    </div>`).join('');
+}
+
+function openUserForm(){
+  document.getElementById('user-ftitle').textContent='Novo Usuário';
+  document.getElementById('user-eid').value='';
+  document.getElementById('user-login').value='';
+  document.getElementById('user-senha').value='';
+  document.getElementById('user-perfil').value='gestao';
+  document.getElementById('user-overlay').classList.add('open');
+}
+
+function openUserFormEdit(id){
+  const u = load(K.users).find(x=>x.id===id); if(!u) return;
+  document.getElementById('user-ftitle').textContent='Editar Usuário';
+  document.getElementById('user-eid').value=u.id;
+  document.getElementById('user-login').value=u.login;
+  document.getElementById('user-senha').value=u.senha;
+  document.getElementById('user-perfil').value=u.perfil;
+  document.getElementById('user-overlay').classList.add('open');
+}
+
+function closeUserForm(){ document.getElementById('user-overlay').classList.remove('open'); }
+
+function saveUser(){
+  const id    = document.getElementById('user-eid').value;
+  const login = document.getElementById('user-login').value.trim();
+  const senha = document.getElementById('user-senha').value;
+  const perfil= document.getElementById('user-perfil').value;
+  if(!login||!senha){ toast('Preencha login e senha.','error'); return; }
+  if(senha.length<4){ toast('Senha mínima: 4 caracteres.','error'); return; }
+  const users = load(K.users);
+  const dup = users.find(u=>u.login===login && u.id!==id);
+  if(dup){ toast('Este login já existe.','error'); return; }
+  const user = {id:id||uid(), login, senha, perfil};
+  const idx = users.findIndex(u=>u.id===user.id);
+  idx>=0 ? users[idx]=user : users.push(user);
+  store(K.users, users);
+  closeUserForm();
+  toast('Usuário salvo!','success');
+  renderConfig();
+}
+
+function deleteUser(id){
+  const users = load(K.users);
+  if(users.filter(u=>u.perfil==='gestao').length<=1 && users.find(u=>u.id===id)?.perfil==='gestao'){
+    toast('Não é possível excluir o único usuário de Gestão.','error'); return;
+  }
+  if(currentUser?.id===id){ toast('Você não pode excluir seu próprio usuário.','error'); return; }
+  store(K.users, users.filter(u=>u.id!==id));
+  toast('Usuário removido.','success');
+  renderConfig();
+}
+
+// ════════════════════════════════════════════════════════
+//  SEED DATA
+// ════════════════════════════════════════════════════════
+const SEED_V = '3';
+function seed(){
+  if(localStorage.getItem('ptc_seed_v') === SEED_V) return;
+  Object.values(K).forEach(k => localStorage.removeItem(k));
+
+  // ── Centros de Custo — Pack To You ──────────────────
+  store(K.cc,[
+    // 1 — ESTOQUE
+    {id:'cc1',  cod:'1',   nome:'Estoque',                    pai:null},
+    {id:'cc2',  cod:'1.1', nome:'Expedição',                  pai:'cc1'},
+    {id:'cc3',  cod:'1.2', nome:'Estoque Embalagem',          pai:'cc1'},
+    {id:'cc4',  cod:'1.3', nome:'Estoque Rótulo',             pai:'cc1'},
+    {id:'cc5',  cod:'1.4', nome:'Estoque Rótulo B',           pai:'cc1'},
+    {id:'cc6',  cod:'1.5', nome:'Estoque de MP',              pai:'cc1'},
+    // 2 — PRODUÇÃO
+    {id:'cc7',  cod:'2',   nome:'Produção',                   pai:null},
+    {id:'cc8',  cod:'2.1', nome:'Fabricação',                 pai:'cc7'},
+    {id:'cc9',  cod:'2.2', nome:'Fracionamento',              pai:'cc7'},
+    {id:'cc10', cod:'2.3', nome:'Envase',                     pai:'cc7'},
+    // 3 — CONTROLE DE QUALIDADE
+    {id:'cc11', cod:'3',   nome:'Controle de Qualidade',      pai:null},
+    {id:'cc12', cod:'3.1', nome:'Laboratório Físico-Químico', pai:'cc11'},
+    {id:'cc13', cod:'3.2', nome:'Microbiologia',              pai:'cc11'},
+    {id:'cc14', cod:'3.3', nome:'Regulatório',                pai:'cc11'},
+    {id:'cc15', cod:'3.4', nome:'Estabilidade',               pai:'cc11'},
+    {id:'cc16', cod:'3.5', nome:'Retenção',                   pai:'cc11'},
+    {id:'cc17', cod:'3.6', nome:'Desenvolvimento',            pai:'cc11'},
+    // 4 — ADMINISTRATIVO
+    {id:'cc18', cod:'4',   nome:'Administrativo',             pai:null},
+    {id:'cc19', cod:'4.1', nome:'Comercial',                  pai:'cc18'},
+    {id:'cc20', cod:'4.2', nome:'Financeiro',                 pai:'cc18'},
+    {id:'cc21', cod:'4.3', nome:'DP/RH',                      pai:'cc18'},
+    {id:'cc22', cod:'4.4', nome:'Diretoria',                  pai:'cc18'},
+    // 5 — MANUTENÇÃO
+    {id:'cc23', cod:'5',   nome:'Manutenção',                 pai:null},
+    {id:'cc24', cod:'5.1', nome:'Predial',                    pai:'cc23'},
+    {id:'cc25', cod:'5.2', nome:'Máquinas',                   pai:'cc23'},
+    // 6 — ALMOXARIFADO
+    {id:'cc26', cod:'6',   nome:'Almoxarifado',               pai:null},
+    {id:'cc27', cod:'6.1', nome:'Facilities',                 pai:'cc26'},
+    {id:'cc28', cod:'6.2', nome:'EPIs',                       pai:'cc26'},
+  ]);
+
+  const n=new Date(), m=n.getMonth()+1, y=n.getFullYear();
+  store(K.bud,[
+    {id:uid(),cc_id:'cc8',  mes:m,ano:y,val:25000},
+    {id:uid(),cc_id:'cc9',  mes:m,ano:y,val:15000},
+    {id:uid(),cc_id:'cc10', mes:m,ano:y,val:18000},
+    {id:uid(),cc_id:'cc12', mes:m,ano:y,val:8000},
+    {id:uid(),cc_id:'cc13', mes:m,ano:y,val:6000},
+    {id:uid(),cc_id:'cc20', mes:m,ano:y,val:10000},
+    {id:uid(),cc_id:'cc24', mes:m,ano:y,val:12000},
+    {id:uid(),cc_id:'cc25', mes:m,ano:y,val:9000},
+    {id:uid(),cc_id:'cc28', mes:m,ano:y,val:4000},
+  ]);
+
+  const today = n.toISOString().split('T')[0];
+  const fut14 = new Date(n); fut14.setDate(fut14.getDate()+14);
+  const f14   = fut14.toISOString().split('T')[0];
+  const fut7  = new Date(n); fut7.setDate(fut7.getDate()+7);
+  const f7    = fut7.toISOString().split('T')[0];
+
+  const y4 = `OC-${y}`;
+  store(K.oc,[
+    {num:`${y4}-0001`,dtcr:today,sol:'Ana Lima',      setor:'Lab. Físico-Químico', cc:'cc12',
+      itens:[{id:'it01a',desc:'Reagentes para análise de pH',qtd:5,und:'un',val:900},
+             {id:'it01b',desc:'Reagentes para análise de viscosidade',qtd:5,und:'un',val:900}],
+      desc:'Reagentes para análise de pH (+1)', val:1800,
+      just:'Estoque crítico de reagentes para controle de processo',dtnec:f14,status:'em_negociacao',dtatual:n.toISOString()},
+    {num:`${y4}-0002`,dtcr:today,sol:'Carlos Mendes', setor:'Fabricação',          cc:'cc8',
+      itens:[{id:'it02a',desc:'Embalagens PET 200mL para body splash linha premium',qtd:5000,und:'un',val:7500}],
+      desc:'Embalagens PET 200mL para body splash linha premium', val:7500,
+      just:'Programação de produção exige reposição de embalagens',dtnec:f14,status:'pendente',dtatual:n.toISOString()},
+    {num:`${y4}-0003`,dtcr:today,sol:'Júlia Andrade', setor:'Microbiologia',       cc:'cc13',
+      itens:[{id:'it03a',desc:'Meios de cultura — reposição mensal',qtd:2,und:'cx',val:500},
+             {id:'it03b',desc:'Luvas de procedimento — reposição mensal',qtd:1,und:'cx',val:450}],
+      desc:'Meios de cultura — reposição mensal (+1)', val:950,
+      just:'Itens de consumo padrão mensal do setor de microbiologia',dtnec:f7,status:'recebido',dtatual:n.toISOString()},
+    {num:`${y4}-0004`,dtcr:today,sol:'Roberto Souza', setor:'Almoxarifado',        cc:'cc28',
+      itens:[{id:'it04a',desc:'Capacetes de segurança',qtd:10,und:'un',val:400},
+             {id:'it04b',desc:'Óculos de proteção',qtd:5,und:'un',val:350},
+             {id:'it04c',desc:'Protetores auriculares',qtd:5,und:'un',val:450}],
+      desc:'Capacetes de segurança (+2)', val:1200,
+      just:'Reposição trimestral de EPIs conforme PPRA',dtnec:f14,status:'pedido',dtatual:n.toISOString()},
+    {num:`${y4}-0005`,dtcr:today,sol:'Mariana Costa', setor:'Financeiro',          cc:'cc20',
+      itens:[{id:'it05a',desc:'Licença software de gestão financeira — renovação anual',qtd:1,und:'sv',val:4800}],
+      desc:'Licença software de gestão financeira — renovação anual', val:4800,
+      just:'Renovação da licença vence no próximo mês',dtnec:f7,status:'em_negociacao',dtatual:n.toISOString()},
+  ]);
+
+  store(K.orc,[
+    // OC-0001: reagentes pH (it01a) — 2 orçamentos; viscosidade (it01b) — 1 orçamento
+    {id:'o01',oc:`${y4}-0001`,item_id:'it01a',forn:'Labquímica Bauru',         cont:'(14) 99801-2345',val:850, prazo:f14,cond:'30 dias', winner:true},
+    {id:'o02',oc:`${y4}-0001`,item_id:'it01a',forn:'Distribuidora Química SP', cont:'(11) 3456-7890', val:920, prazo:f14,cond:'À vista', winner:false},
+    {id:'o03',oc:`${y4}-0001`,item_id:'it01b',forn:'Labquímica Bauru',         cont:'(14) 99801-2345',val:880, prazo:f14,cond:'30 dias', winner:false},
+    // OC-0003: meios de cultura (it03a) — 3 orçamentos + winner; luvas (it03b) — 2 orçamentos + winner
+    {id:'o04',oc:`${y4}-0003`,item_id:'it03a',forn:'Labmaster Suprimentos',    cont:'(14) 3201-4567', val:470, prazo:f7, cond:'À vista', winner:true},
+    {id:'o05',oc:`${y4}-0003`,item_id:'it03a',forn:'ProLab Distribuidora',     cont:'(11) 9876-5432', val:510, prazo:f7, cond:'15 dias', winner:false},
+    {id:'o06',oc:`${y4}-0003`,item_id:'it03a',forn:'Química Ativa Ltda',       cont:'(14) 99123-0000',val:490, prazo:f7, cond:'30 dias', winner:false},
+    {id:'o07',oc:`${y4}-0003`,item_id:'it03b',forn:'Labmaster Suprimentos',    cont:'(14) 3201-4567', val:420, prazo:f7, cond:'À vista', winner:true},
+    {id:'o08',oc:`${y4}-0003`,item_id:'it03b',forn:'ProLab Distribuidora',     cont:'(11) 9876-5432', val:445, prazo:f7, cond:'15 dias', winner:false},
+    // OC-0004: capacetes (it04a), óculos (it04b), protetores (it04c) — com winners
+    {id:'o09',oc:`${y4}-0004`,item_id:'it04a',forn:'EPI Total Bauru',          cont:'(14) 3322-1199', val:380, prazo:f14,cond:'30 dias', winner:true},
+    {id:'o10',oc:`${y4}-0004`,item_id:'it04a',forn:'Segurança Max',            cont:'(14) 99541-8877',val:410, prazo:f14,cond:'À vista', winner:false},
+    {id:'o11',oc:`${y4}-0004`,item_id:'it04b',forn:'EPI Total Bauru',          cont:'(14) 3322-1199', val:330, prazo:f14,cond:'30 dias', winner:false},
+    {id:'o12',oc:`${y4}-0004`,item_id:'it04b',forn:'Proteção SP Distribuidora',cont:'(11) 2211-3344', val:310, prazo:f14,cond:'15 dias', winner:true},
+    {id:'o13',oc:`${y4}-0004`,item_id:'it04c',forn:'Segurança Max',            cont:'(14) 99541-8877',val:430, prazo:f14,cond:'À vista', winner:true},
+    {id:'o14',oc:`${y4}-0004`,item_id:'it04c',forn:'EPI Total Bauru',          cont:'(14) 3322-1199', val:450, prazo:f14,cond:'30 dias', winner:false},
+  ]);
+
+  localStorage.setItem('ptc_seed_v', SEED_V);
+}
+
+// ════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════
+function seedOMs(){
+  if(getOMs().length > 0) return;
+  const today = new Date().toISOString().split('T')[0];
+  store(K.om,[
+    {id:uid(),num:'OM-2026-0001',dtcr:today,sol:'Carlos Mendes', local:'Fabricação',   problema:'Lâmpada queimada no corredor principal',          prioridade:'baixa',   status:'pendente', dtatual:new Date().toISOString()},
+    {id:uid(),num:'OM-2026-0002',dtcr:today,sol:'Júlia Andrade', local:'Laboratório',  problema:'Falha na vedação da janela — entrada de umidade',   prioridade:'alta',    status:'pendente', dtatual:new Date().toISOString()},
+    {id:uid(),num:'OM-2026-0003',dtcr:today,sol:'Ana Lima',      local:'Qualidade',    problema:'Tomada com faísca no bancada de análise',            prioridade:'urgente', status:'pendente', dtatual:new Date().toISOString()},
+    {id:uid(),num:'OM-2026-0004',dtcr:today,sol:'Roberto Souza', local:'Almoxarifado', problema:'Pintura descascando nas paredes laterais',            prioridade:'media',   status:'concluido',dtatual:new Date().toISOString()},
+  ]);
+}
+
+function seedUsers(){
+  if(load(K.users).length > 0) return;
+  store(K.users,[
+    {id:'u1', login:'admin',    senha:'gestao123',   perfil:'gestao'},
+    {id:'u2', login:'compras',  senha:'compras123',  perfil:'compras'},
+    {id:'u3', login:'estoque',  senha:'estoque123',  perfil:'estoque'},
+    {id:'u4', login:'producao', senha:'producao123', perfil:'producao'},
+  ]);
+}
+
+function init(){
+  seed();
+  seedOMs();
+  seedUsers();
+  const n   = new Date();
+  const mes = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('ger-mes').value    = mes;
+  document.getElementById('bud-filter').value = mes;
+  document.getElementById('bud-mes').value    = mes;
+  // App starts at login screen
+}
+
+init();
+</script>
+</body>
+</html>
