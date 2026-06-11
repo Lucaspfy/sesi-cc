@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fluxo de Compras — Pack to You</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -1067,28 +1066,43 @@ const PERFIL_CLS = { gestao:'pb-gestao', compras:'pb-compras', estoque:'pb-estoq
 
 function canAccess(tab){ return currentUser ? (PERFIL_TABS[currentUser.perfil]||[]).includes(tab) : false; }
 function canManage()   { return currentUser && currentUser.perfil !== 'producao'; }
-// ── Cache em memória (substitui localStorage) ──────────────────────────────
+// ── Supabase — acesso direto via fetch (sem biblioteca CDN) ────────────────
+const SB_URL = 'https://mwqcrdmzhtzynausobwk.supabase.co/rest/v1';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13cWNyZG16aHR6eW5hdXNvYndrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExODkxMjYsImV4cCI6MjA5Njc2NTEyNn0.2CRg8C9KfBLT5DGU9DGnWqhRYe_OjbTBkyb_8BSAFBk';
+const SB_HDR = {
+  'apikey':        SB_KEY,
+  'Authorization': `Bearer ${SB_KEY}`,
+  'Content-Type':  'application/json'
+};
+
+// ── Cache em memória ────────────────────────────────────────────────────────
 const DB = { cc:[], bud:[], oc:[], orc:[], users:[], om:[] };
-let _sb = null; // cliente Supabase
 
 const load  = k => DB[k] ?? [];
 const store = (k, v) => { DB[k] = v; _sbPush(k, v); };
 
 async function _sbPush(key, val){
-  if(!_sb) return;
-  try { await _sb.from('app_data').upsert({ key, data: val }); }
-  catch(e){ console.warn('[Supabase] push error', key, e.message); }
+  const res = await fetch(`${SB_URL}/app_data?apikey=${SB_KEY}`, {
+    method:  'POST',
+    headers: { ...SB_HDR, 'Prefer': 'resolution=merge-duplicates' },
+    body:    JSON.stringify({ key, data: val })
+  });
+  if(!res.ok){
+    const txt = await res.text();
+    console.error('[Supabase] push error', key, res.status, txt);
+  }
 }
 
 async function initDB(){
-  _sb = window.supabase.createClient(
-    'https://mwqcrdmzhtzynausobwk.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13cWNyZG16aHR6eW5hdXNvYndrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExODkxMjYsImV4cCI6MjA5Njc2NTEyNn0.2CRg8C9KfBLT5DGU9DGnWqhRYe_OjbTBkyb_8BSAFBk'
-  );
-  try {
-    const { data, error } = await _sb.from('app_data').select('key, data');
-    if(!error && data) data.forEach(r => { if(r.key in DB) DB[r.key] = r.data ?? []; });
-  } catch(e){ console.warn('[Supabase] initDB error', e.message); }
+  const res = await fetch(`${SB_URL}/app_data?select=key,data&apikey=${SB_KEY}`, { headers: SB_HDR });
+  if(!res.ok){
+    const txt = await res.text();
+    console.error('[Supabase] initDB error', res.status, txt);
+    toast(`⚠️ Banco de dados: erro ${res.status} — F12 → Console para detalhes.`, 'error');
+    return;
+  }
+  const rows = await res.json();
+  rows.forEach(r => { if(r.key in DB) DB[r.key] = r.data ?? []; });
 }
 const uid   = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 
