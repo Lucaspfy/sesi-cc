@@ -991,6 +991,7 @@
       <div class="fg">
         <label class="label">Senha</label>
         <input type="password" class="fc" id="user-senha" placeholder="Mínimo 4 caracteres" autocomplete="new-password">
+        <div id="user-senha-hint" style="display:none;font-size:11.5px;color:var(--text-muted);margin-top:4px">Deixe em branco para manter a senha atual</div>
       </div>
       <div class="fg">
         <label class="label">Perfil / Permissão</label>
@@ -1218,12 +1219,36 @@ function toast(msg,type='info'){
 // ════════════════════════════════════════════════════════
 //  AUTH
 // ════════════════════════════════════════════════════════
-function doLogin(){
+async function doLogin(){
   const login = document.getElementById('login-user').value.trim();
   const senha = document.getElementById('login-pass').value;
   if(!login||!senha){ toast('Preencha usuário e senha.','error'); return; }
-  const user = load(K.users).find(u=>u.login===login&&u.senha===senha);
+
+  const user = load(K.users).find(u=>u.login===login);
   if(!user){ toast('Usuário ou senha incorretos.','error'); return; }
+
+  let ok = false, rehash = null;
+  try {
+    const r = await fetch('/api/auth', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'verify', senha, hash: user.senha })
+    });
+    const d = await r.json();
+    ok = d.ok; rehash = d.rehash;
+  } catch(_){
+    // Ambiente local sem Vercel Functions — comparação direta
+    ok = user.senha === senha;
+  }
+
+  if(!ok){ toast('Usuário ou senha incorretos.','error'); return; }
+
+  // Migra automaticamente senha em texto puro → bcrypt
+  if(rehash){
+    const users = load(K.users);
+    const u = users.find(x=>x.id===user.id);
+    if(u){ u.senha = rehash; store(K.users, users); }
+  }
+
   currentUser = user;
   document.getElementById('login-overlay').style.display='none';
   document.getElementById('login-pass').value='';
@@ -2166,6 +2191,8 @@ function openUserForm(){
   document.getElementById('user-eid').value='';
   document.getElementById('user-login').value='';
   document.getElementById('user-senha').value='';
+  document.getElementById('user-senha').placeholder='Mínimo 4 caracteres';
+  document.getElementById('user-senha-hint').style.display='none';
   document.getElementById('user-perfil').value='gestao';
   document.getElementById('user-overlay').classList.add('open');
 }
@@ -2175,25 +2202,46 @@ function openUserFormEdit(id){
   document.getElementById('user-ftitle').textContent='Editar Usuário';
   document.getElementById('user-eid').value=u.id;
   document.getElementById('user-login').value=u.login;
-  document.getElementById('user-senha').value=u.senha;
+  document.getElementById('user-senha').value='';
+  document.getElementById('user-senha').placeholder='Nova senha (opcional)';
+  document.getElementById('user-senha-hint').style.display='block';
   document.getElementById('user-perfil').value=u.perfil;
   document.getElementById('user-overlay').classList.add('open');
 }
 
 function closeUserForm(){ document.getElementById('user-overlay').classList.remove('open'); }
 
-function saveUser(){
-  const id    = document.getElementById('user-eid').value;
-  const login = document.getElementById('user-login').value.trim();
-  const senha = document.getElementById('user-senha').value;
-  const perfil= document.getElementById('user-perfil').value;
-  if(!login||!senha){ toast('Preencha login e senha.','error'); return; }
-  if(senha.length<4){ toast('Senha mínima: 4 caracteres.','error'); return; }
+async function saveUser(){
+  const id      = document.getElementById('user-eid').value;
+  const login   = document.getElementById('user-login').value.trim();
+  const senhaRaw= document.getElementById('user-senha').value;
+  const perfil  = document.getElementById('user-perfil').value;
+  const isEdit  = !!id;
+
+  if(!login){ toast('Preencha o login.','error'); return; }
+  if(!isEdit && !senhaRaw){ toast('Preencha a senha.','error'); return; }
+  if(senhaRaw && senhaRaw.length < 4){ toast('Senha mínima: 4 caracteres.','error'); return; }
+
   const users = load(K.users);
-  const dup = users.find(u=>u.login===login && u.id!==id);
-  if(dup){ toast('Este login já existe.','error'); return; }
-  const user = {id:id||uid(), login, senha, perfil};
-  const idx = users.findIndex(u=>u.id===user.id);
+  if(users.find(u=>u.login===login && u.id!==id)){ toast('Este login já existe.','error'); return; }
+
+  let senha;
+  if(senhaRaw){
+    try {
+      const r = await fetch('/api/auth', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'hash', senha: senhaRaw })
+      });
+      const d = await r.json();
+      senha = d.hash;
+    } catch(_){ senha = senhaRaw; } // fallback local dev
+  } else {
+    // Edição sem nova senha → mantém a existente
+    senha = users.find(u=>u.id===id)?.senha || '';
+  }
+
+  const user = { id: id||uid(), login, senha, perfil };
+  const idx  = users.findIndex(u=>u.id===user.id);
   idx>=0 ? users[idx]=user : users.push(user);
   store(K.users, users);
   closeUserForm();
