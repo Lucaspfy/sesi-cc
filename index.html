@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fluxo de Compras — Pack to You</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -512,6 +513,16 @@
 </head>
 <body>
 
+<!-- Overlay de carregamento — visível até o Supabase inicializar -->
+<div id="loading-overlay" style="
+  position:fixed;inset:0;background:rgba(255,255,255,0.97);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:16px;z-index:9999;font-family:'Outfit',sans-serif
+">
+  <div style="width:52px;height:52px;border-radius:50%;border:4px solid #e9d5ff;border-top-color:#9333ea;animation:spin 1s linear infinite"></div>
+  <div style="font-size:14px;color:#6b7280;font-weight:500;letter-spacing:.02em">Conectando ao banco de dados…</div>
+</div>
+
 <!-- ═══════════════════════════════ LOGIN ═══════════════════════════════ -->
 <div class="login-overlay" id="login-overlay">
   <div class="login-card">
@@ -715,33 +726,8 @@
   <!-- ║       TAB: ACOMPANHAMENTO BI        ║ -->
   <!-- ╚══════════════════════════════════════╝ -->
   <div class="tab-panel" id="tab-bi">
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:420px;gap:24px;text-align:center">
-      <div style="position:relative;width:80px;height:80px">
-        <div style="
-          width:80px;height:80px;border-radius:50%;
-          border:3px solid var(--p200);
-          border-top-color:var(--p500);
-          animation:spin 1.2s linear infinite;
-        "></div>
-        <div style="
-          position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-          font-size:26px;
-        ">◉</div>
-      </div>
-      <div>
-        <div style="font-family:var(--fh);font-size:17px;font-weight:700;color:var(--text);margin-bottom:8px">
-          Em Desenvolvimento
-        </div>
-        <div style="font-size:13.5px;color:var(--text-muted);max-width:320px;line-height:1.6">
-          Aguardando comunicação com sistema <strong style="color:var(--p600)">ERIS</strong>
-        </div>
-      </div>
-      <div style="
-        background:var(--amber-bg);border:1px solid var(--amber-border);
-        color:#92400e;border-radius:var(--r);padding:10px 18px;font-size:12px;font-weight:500
-      ">
-        ⚠️ Integração pendente de configuração
-      </div>
+    <div id="bi-content" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:420px;gap:24px;text-align:center">
+      <!-- preenchido por renderBI() -->
     </div>
   </div>
 
@@ -1064,7 +1050,7 @@
 // ════════════════════════════════════════════════════════
 //  DATA LAYER
 // ════════════════════════════════════════════════════════
-const K = { cc:'ptc_cc', bud:'ptc_bud', oc:'ptc_oc', orc:'ptc_orc', users:'ptc_users', om:'ptc_om' };
+const K = { cc:'cc', bud:'bud', oc:'oc', orc:'orc', users:'users', om:'om' };
 
 // ── Auth ──────────────────────────────────────────────
 let currentUser = null;
@@ -1080,8 +1066,29 @@ const PERFIL_CLS = { gestao:'pb-gestao', compras:'pb-compras', estoque:'pb-estoq
 
 function canAccess(tab){ return currentUser ? (PERFIL_TABS[currentUser.perfil]||[]).includes(tab) : false; }
 function canManage()   { return currentUser && currentUser.perfil !== 'producao'; }
-const load  = k => { try { return JSON.parse(localStorage.getItem(k)) || []; } catch { return []; } };
-const store = (k,v) => localStorage.setItem(k, JSON.stringify(v));
+// ── Cache em memória (substitui localStorage) ──────────────────────────────
+const DB = { cc:[], bud:[], oc:[], orc:[], users:[], om:[] };
+let _sb = null; // cliente Supabase
+
+const load  = k => DB[k] ?? [];
+const store = (k, v) => { DB[k] = v; _sbPush(k, v); };
+
+async function _sbPush(key, val){
+  if(!_sb) return;
+  try { await _sb.from('app_data').upsert({ key, data: val }); }
+  catch(e){ console.warn('[Supabase] push error', key, e.message); }
+}
+
+async function initDB(){
+  _sb = window.supabase.createClient(
+    'https://mwqcrdmzhtzynausobwk.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13cWNyZG16aHR6eW5hdXNvYndrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExODkxMjYsImV4cCI6MjA5Njc2NTEyNn0.2CRg8C9KfBLT5DGU9DGnWqhRYe_OjbTBkyb_8BSAFBk'
+  );
+  try {
+    const { data, error } = await _sb.from('app_data').select('key, data');
+    if(!error && data) data.forEach(r => { if(r.key in DB) DB[r.key] = r.data ?? []; });
+  } catch(e){ console.warn('[Supabase] initDB error', e.message); }
+}
 const uid   = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 
 // CCs
@@ -1258,8 +1265,71 @@ function switchTab(tab,btn){
   if(tab==='estruturacao') renderEst();
   if(tab==='gerencial')    renderGer();
   if(tab==='acomp')        renderAcomp();
+  if(tab==='bi')           renderBI();
   if(tab==='manut')        renderManut();
   if(tab==='config')       renderConfig();
+}
+
+// ════════════════════════════════════════════════════════
+//  ACOMPANHAMENTO BI
+// ════════════════════════════════════════════════════════
+async function renderBI(){
+  const el = document.getElementById('bi-content');
+  if(!el) return;
+
+  // Estado: carregando
+  el.innerHTML = `
+    <div style="position:relative;width:60px;height:60px">
+      <div style="width:60px;height:60px;border-radius:50%;border:3px solid var(--p200);border-top-color:var(--p500);animation:spin 1.2s linear infinite;"></div>
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:22px">◉</div>
+    </div>
+    <div style="font-size:13px;color:var(--text-muted)">Verificando conexão com ERIS…</div>`;
+
+  try {
+    const res = await fetch('/api/eris');
+    const json = await res.json();
+
+    if(!json.ok && json.error === 'not_configured'){
+      _biPendente(el);
+      return;
+    }
+    if(!json.ok){
+      _biErro(el, json.message || 'Erro desconhecido.');
+      return;
+    }
+    // TODO: quando integração estiver ativa, renderizar gráficos com json.data
+    _biPendente(el);
+
+  } catch(_){
+    // Rodando localmente sem Vercel Functions — exibe placeholder
+    _biPendente(el);
+  }
+}
+
+function _biPendente(el){
+  el.innerHTML = `
+    <div style="position:relative;width:80px;height:80px">
+      <div style="width:80px;height:80px;border-radius:50%;border:3px solid var(--p200);border-top-color:var(--p500);animation:spin 1.2s linear infinite;"></div>
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px">◉</div>
+    </div>
+    <div>
+      <div style="font-family:var(--fh);font-size:17px;font-weight:700;color:var(--text);margin-bottom:8px">Em Desenvolvimento</div>
+      <div style="font-size:13.5px;color:var(--text-muted);max-width:320px;line-height:1.6">
+        Aguardando comunicação com sistema <strong style="color:var(--p600)">ERIS</strong>
+      </div>
+    </div>
+    <div style="background:var(--amber-bg);border:1px solid var(--amber-border);color:#92400e;border-radius:var(--r);padding:10px 18px;font-size:12px;font-weight:500">
+      ⚠️ Integração pendente de configuração
+    </div>`;
+}
+
+function _biErro(el, msg){
+  el.innerHTML = `
+    <div style="font-size:36px">⚠️</div>
+    <div>
+      <div style="font-family:var(--fh);font-size:17px;font-weight:700;color:var(--text);margin-bottom:8px">Erro na integração ERIS</div>
+      <div style="font-size:13px;color:var(--text-muted);max-width:360px;line-height:1.6">${msg}</div>
+    </div>`;
 }
 
 // ════════════════════════════════════════════════════════
@@ -2060,7 +2130,6 @@ function restoreData(event){
       if(data.orc)   store(K.orc,   data.orc);
       if(data.om)    store(K.om,    data.om);
       if(data.users) store(K.users, data.users);
-      localStorage.setItem('ptc_seed_v', data._meta.version || SEED_V);
       toast('Backup restaurado! Recarregando...', 'success');
       setTimeout(()=>location.reload(), 1500);
     } catch {
@@ -2148,8 +2217,7 @@ function deleteUser(id){
 // ════════════════════════════════════════════════════════
 const SEED_V = '3';
 function seed(){
-  if(localStorage.getItem('ptc_seed_v') === SEED_V) return;
-  Object.values(K).forEach(k => localStorage.removeItem(k));
+  if(DB.cc.length > 0) return; // Supabase já tem dados
 
   // ── Centros de Custo — Pack To You ──────────────────
   store(K.cc,[
@@ -2256,7 +2324,6 @@ function seed(){
     {id:'o14',oc:`${y4}-0004`,item_id:'it04c',forn:'EPI Total Bauru',          cont:'(14) 3322-1199', val:450, prazo:f14,cond:'30 dias', winner:false},
   ]);
 
-  localStorage.setItem('ptc_seed_v', SEED_V);
 }
 
 // ════════════════════════════════════════════════════════
@@ -2283,7 +2350,8 @@ function seedUsers(){
   ]);
 }
 
-function init(){
+async function init(){
+  await initDB();  // carrega dados do Supabase → DB cache
   seed();
   seedOMs();
   seedUsers();
@@ -2292,6 +2360,7 @@ function init(){
   document.getElementById('ger-mes').value    = mes;
   document.getElementById('bud-filter').value = mes;
   document.getElementById('bud-mes').value    = mes;
+  document.getElementById('loading-overlay').style.display = 'none';
   // App starts at login screen
 }
 
