@@ -2414,16 +2414,6 @@ function seed(){
 // ════════════════════════════════════════════════════════
 //  INIT
 // ════════════════════════════════════════════════════════
-function seedOMs(){
-  if(getOMs().length > 0) return;
-  const today = new Date().toISOString().split('T')[0];
-  store(K.om,[
-    {id:uid(),num:'OM-2026-0001',dtcr:today,sol:'Carlos Mendes', local:'Fabricação',   problema:'Lâmpada queimada no corredor principal',          prioridade:'baixa',   status:'pendente', dtatual:new Date().toISOString()},
-    {id:uid(),num:'OM-2026-0002',dtcr:today,sol:'Júlia Andrade', local:'Laboratório',  problema:'Falha na vedação da janela — entrada de umidade',   prioridade:'alta',    status:'pendente', dtatual:new Date().toISOString()},
-    {id:uid(),num:'OM-2026-0003',dtcr:today,sol:'Ana Lima',      local:'Qualidade',    problema:'Tomada com faísca no bancada de análise',            prioridade:'urgente', status:'pendente', dtatual:new Date().toISOString()},
-    {id:uid(),num:'OM-2026-0004',dtcr:today,sol:'Roberto Souza', local:'Almoxarifado', problema:'Pintura descascando nas paredes laterais',            prioridade:'media',   status:'concluido',dtatual:new Date().toISOString()},
-  ]);
-}
 
 function seedUsers(){
   if(load(K.users).length > 0) return;
@@ -2439,7 +2429,6 @@ async function init(){
   await initDB();  // carrega dados do Supabase → DB cache
   initRealtime();  // escuta mudanças em tempo real
   seed();
-  seedOMs();
   seedUsers();
   const n   = new Date();
   const mes = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
