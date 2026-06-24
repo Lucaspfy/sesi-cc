@@ -1260,36 +1260,13 @@ function toast(msg,type='info'){
 // ════════════════════════════════════════════════════════
 //  AUTH
 // ════════════════════════════════════════════════════════
-async function doLogin(){
+function doLogin(){
   const login = document.getElementById('login-user').value.trim();
   const senha = document.getElementById('login-pass').value;
   if(!login||!senha){ toast('Preencha usuário e senha.','error'); return; }
-
-  const user = load(K.users).find(u=>u.login===login);
+  seedUsers();
+  const user = load(K.users).find(u=>u.login===login&&u.senha===senha);
   if(!user){ toast('Usuário ou senha incorretos.','error'); return; }
-
-  let ok = false, rehash = null;
-  try {
-    const r = await fetch('/api/auth', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'verify', senha, hash: user.senha })
-    });
-    const d = await r.json();
-    ok = d.ok; rehash = d.rehash;
-  } catch(_){
-    // Ambiente local sem Vercel Functions — comparação direta
-    ok = user.senha === senha;
-  }
-
-  if(!ok){ toast('Usuário ou senha incorretos.','error'); return; }
-
-  // Migra automaticamente senha em texto puro → bcrypt
-  if(rehash){
-    const users = load(K.users);
-    const u = users.find(x=>x.id===user.id);
-    if(u){ u.senha = rehash; store(K.users, users); }
-  }
-
   currentUser = user;
   document.getElementById('login-overlay').style.display='none';
   document.getElementById('login-pass').value='';
