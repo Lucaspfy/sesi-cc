@@ -509,6 +509,26 @@
     }
     .om-pendente { background:var(--amber-bg); color:var(--amber); }
     .om-concluido{ background:var(--green-bg); color:var(--green); }
+
+    /* ── SALAS DE REUNIÃO ── */
+    .cal-wrap { display:flex; flex-direction:column; gap:14px; }
+    .cal-controls { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .cal-nav { display:flex; align-items:center; gap:6px; }
+    .cal-nav-btn { background:var(--p50); border:1px solid var(--p200); border-radius:var(--r); padding:4px 12px; cursor:pointer; font-size:13px; color:var(--p700); font-weight:600; }
+    .cal-nav-btn:hover { background:var(--p100); }
+    .cal-nav-title { font-weight:700; font-size:13.5px; color:var(--text); min-width:230px; text-align:center; }
+    .cal-view-btns { display:flex; border:1px solid var(--brd); border-radius:var(--r); overflow:hidden; }
+    .cal-view-btn { padding:5px 15px; font-size:12.5px; font-weight:600; cursor:pointer; background:var(--card); border:none; color:var(--text-muted); transition:background .15s; }
+    .cal-view-btn.active { background:var(--p500); color:#fff; }
+    .cal-legend { display:flex; gap:16px; }
+    .cal-legend-item { display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text-muted); font-weight:500; }
+    .cal-legend-dot { width:12px; height:12px; border-radius:3px; }
+    .cal-outer { overflow-x:auto; border:1px solid var(--brd); border-radius:var(--r); background:var(--card); }
+    .cal-event-block { position:absolute; left:3px; right:3px; border-radius:5px; padding:3px 6px; font-size:11px; line-height:1.35; overflow:hidden; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,.10); transition:filter .12s; }
+    .cal-event-block:hover { filter:brightness(.9); }
+    .cal-time-cell { height:48px; display:flex; align-items:flex-start; padding:2px 6px 0 0; font-size:10.5px; color:var(--text-muted); border-bottom:1px solid var(--brd); box-sizing:border-box; justify-content:flex-end; }
+    .cal-month-cell { min-height:82px; padding:5px; cursor:pointer; border-right:1px solid var(--brd); border-bottom:1px solid var(--brd); transition:background .12s; }
+    .cal-month-cell:hover { background:var(--p50) !important; }
   </style>
 </head>
 <body>
@@ -567,6 +587,9 @@
     </button>
     <button class="tab-btn" data-tab="manut" onclick="switchTab('manut',this)">
       <span class="tab-icon">🔧</span>Manutenção
+    </button>
+    <button class="tab-btn" data-tab="salas" onclick="switchTab('salas',this)">
+      <span class="tab-icon">◫</span>Salas de Reunião
     </button>
     <button class="tab-btn" data-tab="config" onclick="switchTab('config',this)">
       <span class="tab-icon">⚙</span>Configurações
@@ -770,6 +793,78 @@
         </thead>
         <tbody id="manut-tbody"></tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- ╔══════════════════════════════════════╗ -->
+  <!-- ║       TAB: SALAS DE REUNIÃO        ║ -->
+  <!-- ╚══════════════════════════════════════╝ -->
+  <div class="tab-panel" id="tab-salas">
+    <div id="salas-content"></div>
+  </div>
+
+  <!-- Modal: Reserva de Sala -->
+  <div class="cc-overlay" id="reserva-overlay" onclick="if(event.target===this)closeReservaModal()">
+    <div class="cc-modal" style="max-width:480px">
+      <div class="cc-modal-hdr">
+        <span class="cc-modal-title" id="reserva-modal-title">Nova Reserva</span>
+        <button class="modal-close" onclick="closeReservaModal()">✕</button>
+      </div>
+      <div class="cc-modal-body" style="display:flex;flex-direction:column;gap:14px">
+        <div class="fg">
+          <label class="label">Sala</label>
+          <select class="fc" id="res-sala">
+            <option value="treinamento">Sala de Treinamento</option>
+            <option value="amostras">Sala de Amostras/Clientes</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="label">Data</label>
+          <input type="date" class="fc" id="res-data">
+        </div>
+        <div class="g2">
+          <div class="fg">
+            <label class="label">Horário de início</label>
+            <select class="fc" id="res-inicio">
+              <option>07:00</option><option>07:30</option><option>08:00</option><option>08:30</option>
+              <option>09:00</option><option>09:30</option><option>10:00</option><option>10:30</option>
+              <option>11:00</option><option>11:30</option><option>12:00</option><option>12:30</option>
+              <option>13:00</option><option>13:30</option><option>14:00</option><option>14:30</option>
+              <option>15:00</option><option>15:30</option><option>16:00</option><option>16:30</option>
+              <option>17:00</option><option>17:30</option><option>18:00</option><option>18:30</option>
+              <option>19:00</option><option>19:30</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="label">Horário de término</label>
+            <select class="fc" id="res-fim">
+              <option>07:30</option><option>08:00</option><option>08:30</option><option>09:00</option>
+              <option>09:30</option><option>10:00</option><option>10:30</option><option>11:00</option>
+              <option>11:30</option><option>12:00</option><option>12:30</option><option>13:00</option>
+              <option>13:30</option><option>14:00</option><option>14:30</option><option>15:00</option>
+              <option>15:30</option><option>16:00</option><option>16:30</option><option>17:00</option>
+              <option>17:30</option><option>18:00</option><option>18:30</option><option>19:00</option>
+              <option>19:30</option><option>20:00</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg">
+          <label class="label">Responsável</label>
+          <input type="text" class="fc" id="res-resp" placeholder="Nome do responsável pela reserva">
+        </div>
+        <div class="fg">
+          <label class="label">Nome do evento / reunião</label>
+          <input type="text" class="fc" id="res-evento" placeholder="Ex: Treinamento Setor Comercial">
+        </div>
+        <div class="flex gap8" style="margin-top:4px;align-items:center">
+          <button class="btn btn-primary btn-sm" onclick="saveReserva()">✔ Salvar</button>
+          <button class="btn btn-ghost btn-sm" onclick="closeReservaModal()">Cancelar</button>
+          <div style="flex:1"></div>
+          <button id="res-del-btn" class="btn btn-sm"
+            style="background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);display:none"
+            onclick="deleteReserva()">✕ Cancelar Reserva</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1051,17 +1146,17 @@
 // ════════════════════════════════════════════════════════
 //  DATA LAYER
 // ════════════════════════════════════════════════════════
-const K = { cc:'cc', bud:'bud', oc:'oc', orc:'orc', users:'users', om:'om' };
+const K = { cc:'cc', bud:'bud', oc:'oc', orc:'orc', users:'users', om:'om', reservas:'reservas' };
 
 // ── Auth ──────────────────────────────────────────────
 let currentUser = null;
 
 const PERFIL_LABELS = { gestao:'Gestão', compras:'Compras', estoque:'Estoque', producao:'Produção' };
 const PERFIL_TABS   = {
-  gestao:  ['estruturacao','gerencial','acomp','bi','manut','config'],
-  compras: ['gerencial','acomp','bi','manut'],
-  estoque: ['acomp','manut'],
-  producao:['acomp','manut'],
+  gestao:  ['estruturacao','gerencial','acomp','bi','salas','manut','config'],
+  compras: ['gerencial','acomp','bi','salas','manut'],
+  estoque: ['acomp','salas','manut'],
+  producao:['acomp','salas','manut'],
 };
 const PERFIL_CLS = { gestao:'pb-gestao', compras:'pb-compras', estoque:'pb-estoque', producao:'pb-producao' };
 
@@ -1077,7 +1172,7 @@ const SB_HDR = {
 };
 
 // ── Cache em memória ────────────────────────────────────────────────────────
-const DB = { cc:[], bud:[], oc:[], orc:[], users:[], om:[] };
+const DB = { cc:[], bud:[], oc:[], orc:[], users:[], om:[], reservas:[] };
 
 const load  = k => DB[k] ?? [];
 const store = (k, v) => { DB[k] = v; _sbPush(k, v); };
@@ -1128,6 +1223,7 @@ function reRenderCurrentTab(){
   if(tab==='estruturacao') renderEst();
   else if(tab==='gerencial') renderGer();
   else if(tab==='acomp')    renderAcomp();
+  else if(tab==='salas')    renderSalas();
   else if(tab==='manut')    renderManut();
   else if(tab==='config')   renderConfig();
 }
@@ -1260,13 +1356,36 @@ function toast(msg,type='info'){
 // ════════════════════════════════════════════════════════
 //  AUTH
 // ════════════════════════════════════════════════════════
-function doLogin(){
+async function doLogin(){
   const login = document.getElementById('login-user').value.trim();
   const senha = document.getElementById('login-pass').value;
   if(!login||!senha){ toast('Preencha usuário e senha.','error'); return; }
-  seedUsers();
-  const user = load(K.users).find(u=>u.login===login&&u.senha===senha);
+
+  const user = load(K.users).find(u=>u.login===login);
   if(!user){ toast('Usuário ou senha incorretos.','error'); return; }
+
+  let ok = false, rehash = null;
+  try {
+    const r = await fetch('/api/auth', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'verify', senha, hash: user.senha })
+    });
+    const d = await r.json();
+    ok = d.ok; rehash = d.rehash;
+  } catch(_){
+    // Ambiente local sem Vercel Functions — comparação direta
+    ok = user.senha === senha;
+  }
+
+  if(!ok){ toast('Usuário ou senha incorretos.','error'); return; }
+
+  // Migra automaticamente senha em texto puro → bcrypt
+  if(rehash){
+    const users = load(K.users);
+    const u = users.find(x=>x.id===user.id);
+    if(u){ u.senha = rehash; store(K.users, users); }
+  }
+
   currentUser = user;
   document.getElementById('login-overlay').style.display='none';
   document.getElementById('login-pass').value='';
@@ -1305,6 +1424,7 @@ function switchTab(tab,btn){
   if(tab==='gerencial')    renderGer();
   if(tab==='acomp')        renderAcomp();
   if(tab==='bi')           renderBI();
+  if(tab==='salas')        renderSalas();
   if(tab==='manut')        renderManut();
   if(tab==='config')       renderConfig();
 }
@@ -2275,6 +2395,283 @@ function deleteUser(id){
 }
 
 // ════════════════════════════════════════════════════════
+//  SALAS DE REUNIÃO
+// ════════════════════════════════════════════════════════
+const SALA_LABELS = { treinamento:'Sala de Treinamento', amostras:'Sala de Amostras/Clientes' };
+const SALA_COLOR  = { treinamento:'#9333ea', amostras:'#2563eb' };
+const SALA_BG     = { treinamento:'rgba(147,51,234,.15)', amostras:'rgba(37,99,235,.15)' };
+
+let slView   = 'semana';
+let slDate   = new Date();
+let slEditId = null;
+
+const getReservas  = () => load(K.reservas);
+const timeToMin    = t => { const [h,m]=t.split(':').map(Number); return h*60+m; };
+const isoDate      = d => d.toISOString().split('T')[0];
+const addDays      = (d,n) => { const r=new Date(d); r.setDate(r.getDate()+n); return r; };
+const startOfWeek  = d => { const r=new Date(d); const dow=r.getDay(); r.setDate(r.getDate()-(dow===0?6:dow-1)); return r; };
+const SL_DOW_S     = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const SL_DOW_L     = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+const SL_MON       = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const PX_HR        = 48;
+const CAL_START    = 7*60; // 7:00 em minutos
+const CAL_SLOTS    = 27;   // slots de 30 min de 7:00 a 20:00
+
+function reservaConflita(sala, data, inicio, fim, excludeId=null){
+  return getReservas()
+    .filter(r => r.sala===sala && r.data===data && r.id!==excludeId)
+    .some(r => timeToMin(inicio)<timeToMin(r.fim) && timeToMin(fim)>timeToMin(r.inicio));
+}
+
+function fmtDateBR(d){
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+}
+
+function renderSalas(){
+  const el = document.getElementById('salas-content');
+  if(!el) return;
+  const today = isoDate(new Date());
+
+  let navTitle = '';
+  if(slView==='dia'){
+    navTitle = `${SL_DOW_L[slDate.getDay()]}, ${fmtDateBR(slDate)}`;
+  } else if(slView==='semana'){
+    const mon = startOfWeek(slDate);
+    navTitle  = `${fmtDateBR(mon)} — ${fmtDateBR(addDays(mon,6))}`;
+  } else {
+    navTitle = `${SL_MON[slDate.getMonth()]} ${slDate.getFullYear()}`;
+  }
+
+  let html = `<div class="cal-wrap">
+    <div class="cal-controls">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="slNav(-1)">‹</button>
+        <span class="cal-nav-title">${navTitle}</span>
+        <button class="cal-nav-btn" onclick="slNav(1)">›</button>
+        <button class="cal-nav-btn" onclick="slGoToday()" style="margin-left:4px;font-size:11.5px">Hoje</button>
+      </div>
+      <div style="flex:1"></div>
+      <div class="cal-view-btns">
+        <button class="cal-view-btn${slView==='dia'?' active':''}"    onclick="slSetView('dia')">Dia</button>
+        <button class="cal-view-btn${slView==='semana'?' active':''}" onclick="slSetView('semana')">Semana</button>
+        <button class="cal-view-btn${slView==='mes'?' active':''}"    onclick="slSetView('mes')">Mês</button>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="openReservaModal(null)">+ Nova Reserva</button>
+    </div>
+    <div class="cal-legend">
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#9333ea"></div>Sala de Treinamento</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#2563eb"></div>Sala de Amostras/Clientes</div>
+    </div>`;
+
+  if(slView==='semana')      html += slRenderWeek(today);
+  else if(slView==='dia')    html += slRenderDay(today);
+  else                       html += slRenderMonth(today);
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// ── Coluna de horários (compartilhada) ──────────────────────────────────────
+function slTimeCells(){
+  let h='';
+  for(let s=0; s<CAL_SLOTS; s++){
+    const min = CAL_START + s*30;
+    const lbl = s%2===0 ? `${String(Math.floor(min/60)).padStart(2,'0')}:00` : '';
+    h += `<div class="cal-time-cell">${lbl}</div>`;
+  }
+  return h;
+}
+
+// ── SEMANA ──────────────────────────────────────────────────────────────────
+function slRenderWeek(today){
+  const mon  = startOfWeek(slDate);
+  const days = Array.from({length:7},(_,i)=>addDays(mon,i));
+  const res  = getReservas();
+
+  // Cabeçalho
+  let hdr = `<div style="background:var(--card);border-bottom:2px solid var(--brd);padding:4px 0;text-align:center;position:sticky;top:0;z-index:3"></div>`;
+  days.forEach(d => {
+    const iso = isoDate(d); const isT = iso===today;
+    hdr += `<div onclick="slGoDay('${iso}')" style="background:var(--card);border-bottom:2px solid var(--brd);
+      border-left:1px solid var(--brd);padding:6px 4px;text-align:center;cursor:pointer;
+      position:sticky;top:0;z-index:3;${isT?'color:var(--p600)':''}">
+      <div style="font-size:10.5px;font-weight:600;color:${isT?'var(--p500)':'var(--text-muted)'}">${SL_DOW_S[d.getDay()]}</div>
+      <div style="font-size:${isT?15:13}px;font-weight:${isT?800:600};${isT?`background:var(--p500);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;margin:2px auto 0`:''}">${d.getDate()}</div>
+    </div>`;
+  });
+
+  // Colunas de dias com eventos
+  let cols = `<div style="display:flex;flex-direction:column">${slTimeCells()}</div>`;
+  days.forEach(d => {
+    const iso = isoDate(d); const isT = iso===today;
+    const dayRes = res.filter(r=>r.data===iso);
+    cols += `<div style="flex:1;min-width:110px;position:relative;border-left:1px solid var(--brd);background:${isT?'rgba(168,85,247,.03)':''}">`;
+    for(let s=0;s<CAL_SLOTS;s++) cols+=`<div style="height:48px;border-bottom:1px solid var(--brd);box-sizing:border-box"></div>`;
+    dayRes.forEach(r=>{
+      const top=(timeToMin(r.inicio)-CAL_START)*(PX_HR/60);
+      const hgt=(timeToMin(r.fim)-timeToMin(r.inicio))*(PX_HR/60);
+      cols+=`<div class="cal-event-block" onclick="openReservaModal('${r.id}')"
+        style="top:${top}px;height:${Math.max(hgt,22)}px;background:${SALA_BG[r.sala]};border-left:3px solid ${SALA_COLOR[r.sala]}">
+        <div style="font-weight:700;color:${SALA_COLOR[r.sala]};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.evento}</div>
+        ${hgt>=40?`<div style="color:${SALA_COLOR[r.sala]};opacity:.8;font-size:10px">${r.inicio}–${r.fim} · ${r.responsavel}</div>`:''}
+      </div>`;
+    });
+    cols+='</div>';
+  });
+
+  return `<div class="cal-outer" style="overflow-y:auto;max-height:640px">
+    <div style="display:grid;grid-template-columns:52px repeat(7,minmax(110px,1fr));min-width:840px">
+      ${hdr}
+      <div style="display:contents">${cols}</div>
+    </div>
+  </div>`;
+}
+
+// ── DIA ─────────────────────────────────────────────────────────────────────
+function slRenderDay(today){
+  const iso  = isoDate(slDate);
+  const res  = getReservas().filter(r=>r.data===iso);
+  const salas= ['treinamento','amostras'];
+
+  let hdr = `<div style="background:var(--card);border-bottom:2px solid var(--brd);padding:8px 0"></div>`;
+  salas.forEach(s=>{ hdr+=`<div style="border-left:1px solid var(--brd);border-bottom:2px solid var(--brd);
+    padding:10px;text-align:center;font-size:13px;font-weight:700;color:${SALA_COLOR[s]};background:var(--card)">
+    ${SALA_LABELS[s]}</div>`; });
+
+  let cols = `<div style="display:flex;flex-direction:column">${slTimeCells()}</div>`;
+  salas.forEach(s=>{
+    const sRes = res.filter(r=>r.sala===s);
+    cols+=`<div style="flex:1;position:relative;border-left:1px solid var(--brd)">`;
+    for(let i=0;i<CAL_SLOTS;i++) cols+=`<div style="height:48px;border-bottom:1px solid var(--brd)"></div>`;
+    sRes.forEach(r=>{
+      const top=(timeToMin(r.inicio)-CAL_START)*(PX_HR/60);
+      const hgt=(timeToMin(r.fim)-timeToMin(r.inicio))*(PX_HR/60);
+      cols+=`<div class="cal-event-block" onclick="openReservaModal('${r.id}')"
+        style="top:${top}px;height:${Math.max(hgt,26)}px;background:${SALA_BG[s]};border-left:3px solid ${SALA_COLOR[s]}">
+        <div style="font-weight:700;color:${SALA_COLOR[s]}">${r.evento}</div>
+        <div style="color:${SALA_COLOR[s]};opacity:.8;font-size:10px">${r.inicio}–${r.fim} · ${r.responsavel}</div>
+      </div>`;
+    });
+    cols+='</div>';
+  });
+
+  return `<div class="cal-outer" style="overflow-y:auto;max-height:640px">
+    <div style="display:grid;grid-template-columns:52px 1fr 1fr">
+      ${hdr}
+      <div style="display:contents">${cols}</div>
+    </div>
+  </div>`;
+}
+
+// ── MÊS ─────────────────────────────────────────────────────────────────────
+function slRenderMonth(today){
+  const y=slDate.getFullYear(), mo=slDate.getMonth();
+  const first=new Date(y,mo,1), last=new Date(y,mo+1,0);
+  let dow=first.getDay(); dow=dow===0?6:dow-1; // Seg=0
+  const res=getReservas();
+
+  let html=`<div class="cal-outer"><div style="display:grid;grid-template-columns:repeat(7,1fr)">`;
+  ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'].forEach(d=>{
+    html+=`<div style="text-align:center;padding:7px;font-size:11.5px;font-weight:700;
+      color:var(--text-muted);background:var(--surface);
+      border-right:1px solid var(--brd);border-bottom:1px solid var(--brd)">${d}</div>`;
+  });
+
+  for(let i=0;i<dow;i++) html+=`<div class="cal-month-cell" style="background:var(--surface)"></div>`;
+
+  for(let day=1;day<=last.getDate();day++){
+    const d=new Date(y,mo,day), iso=isoDate(d), isT=iso===today;
+    const dr=res.filter(r=>r.data===iso);
+    const isSun=d.getDay()===0, isSat=d.getDay()===6;
+    html+=`<div class="cal-month-cell" onclick="slGoDay('${iso}')"
+      style="background:${isT?'rgba(168,85,247,.06)':'var(--card)'}">
+      <div style="font-size:12px;font-weight:700;margin-bottom:4px;${isT?
+        `background:var(--p500);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;`:
+        `color:${isSun||isSat?'#ef4444':'var(--text-muted)'}`}">${day}</div>`;
+    dr.slice(0,3).forEach(r=>{
+      html+=`<div style="font-size:10.5px;border-radius:3px;padding:1px 5px;margin-bottom:2px;
+        overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:#fff;font-weight:500;
+        background:${SALA_COLOR[r.sala]}" title="${SALA_LABELS[r.sala]}: ${r.evento} (${r.inicio}–${r.fim})">${r.evento}</div>`;
+    });
+    if(dr.length>3) html+=`<div style="font-size:10px;color:var(--text-muted)">+${dr.length-3} mais</div>`;
+    html+='</div>';
+  }
+
+  const total=dow+last.getDate();
+  const rem=total%7===0?0:7-(total%7);
+  for(let i=0;i<rem;i++) html+=`<div class="cal-month-cell" style="background:var(--surface)"></div>`;
+  html+='</div></div>';
+  return html;
+}
+
+// ── Navegação ────────────────────────────────────────────────────────────────
+function slNav(dir){
+  if(slView==='dia')         slDate=addDays(slDate,dir);
+  else if(slView==='semana') slDate=addDays(slDate,dir*7);
+  else { const d=new Date(slDate); d.setMonth(d.getMonth()+dir); slDate=d; }
+  renderSalas();
+}
+function slGoToday(){ slDate=new Date(); renderSalas(); }
+function slSetView(v){ slView=v; renderSalas(); }
+function slGoDay(iso){ slDate=new Date(iso+'T12:00:00'); slView='dia'; renderSalas(); }
+
+// ── Modal ────────────────────────────────────────────────────────────────────
+function openReservaModal(id){
+  slEditId = id || null;
+  const r = slEditId ? getReservas().find(x=>x.id===slEditId) : null;
+  document.getElementById('reserva-modal-title').textContent = r ? 'Editar Reserva' : 'Nova Reserva';
+  document.getElementById('res-sala').value   = r?.sala    || 'treinamento';
+  document.getElementById('res-data').value   = r?.data    || isoDate(slDate);
+  document.getElementById('res-inicio').value = r?.inicio  || '08:00';
+  document.getElementById('res-fim').value    = r?.fim     || '09:00';
+  document.getElementById('res-resp').value   = r?.responsavel || '';
+  document.getElementById('res-evento').value = r?.evento  || '';
+  const canDel = r && (currentUser?.login===r.criadoPor || currentUser?.perfil==='gestao');
+  document.getElementById('res-del-btn').style.display = canDel ? '' : 'none';
+  document.getElementById('reserva-overlay').classList.add('open');
+}
+
+function closeReservaModal(){
+  document.getElementById('reserva-overlay').classList.remove('open');
+  slEditId=null;
+}
+
+function saveReserva(){
+  const sala   = document.getElementById('res-sala').value;
+  const data   = document.getElementById('res-data').value;
+  const inicio = document.getElementById('res-inicio').value;
+  const fim    = document.getElementById('res-fim').value;
+  const resp   = document.getElementById('res-resp').value.trim();
+  const evento = document.getElementById('res-evento').value.trim();
+  if(!sala||!data||!inicio||!fim||!resp||!evento){ toast('Preencha todos os campos.','error'); return; }
+  if(timeToMin(fim)<=timeToMin(inicio)){ toast('Término deve ser após o início.','error'); return; }
+  if(reservaConflita(sala,data,inicio,fim,slEditId)){
+    toast(`Conflito: ${SALA_LABELS[sala]} já está reservada nesse horário.`,'error'); return;
+  }
+  const all = getReservas();
+  if(slEditId){
+    const idx=all.findIndex(x=>x.id===slEditId);
+    if(idx>=0) all[idx]={...all[idx],sala,data,inicio,fim,responsavel:resp,evento,editadoEm:new Date().toISOString()};
+  } else {
+    all.push({id:uid(),sala,data,inicio,fim,responsavel:resp,evento,
+      criadoPor:currentUser?.login||'',criadoEm:new Date().toISOString()});
+  }
+  store(K.reservas,all);
+  closeReservaModal();
+  toast(slEditId?'Reserva atualizada!':'Reserva criada com sucesso!','success');
+  renderSalas();
+}
+
+function deleteReserva(){
+  if(!slEditId) return;
+  if(!confirm('Deseja cancelar esta reserva?')) return;
+  store(K.reservas, getReservas().filter(x=>x.id!==slEditId));
+  closeReservaModal();
+  toast('Reserva cancelada.','info');
+  renderSalas();
+}
+
+// ════════════════════════════════════════════════════════
 //  SEED DATA
 // ════════════════════════════════════════════════════════
 const SEED_V = '3';
@@ -2395,7 +2792,7 @@ function seed(){
 function seedUsers(){
   if(load(K.users).length > 0) return;
   store(K.users,[
-    {id:'u1', login:'admin',    senha:'Gestao123',   perfil:'gestao'},
+    {id:'u1', login:'admin',    senha:'gestao123',   perfil:'gestao'},
     {id:'u2', login:'compras',  senha:'compras123',  perfil:'compras'},
     {id:'u3', login:'estoque',  senha:'estoque123',  perfil:'estoque'},
     {id:'u4', login:'producao', senha:'producao123', perfil:'producao'},
@@ -2403,8 +2800,8 @@ function seedUsers(){
 }
 
 async function init(){
-  try { await initDB(); } catch(e){ console.error('[init] initDB failed', e); }
-  try { initRealtime(); } catch(e){}
+  await initDB();  // carrega dados do Supabase → DB cache
+  initRealtime();  // escuta mudanças em tempo real
   seed();
   seedUsers();
   const n   = new Date();
@@ -2413,6 +2810,7 @@ async function init(){
   document.getElementById('bud-filter').value = mes;
   document.getElementById('bud-mes').value    = mes;
   document.getElementById('loading-overlay').style.display = 'none';
+  // App starts at login screen
 }
 
 init();
