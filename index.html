@@ -2403,8 +2403,8 @@ function seedUsers(){
 }
 
 async function init(){
-  await initDB();  // carrega dados do Supabase → DB cache
-  initRealtime();  // escuta mudanças em tempo real
+  try { await initDB(); } catch(e){ console.error('[init] initDB failed', e); }
+  try { initRealtime(); } catch(e){}
   seed();
   seedUsers();
   const n   = new Date();
@@ -2413,7 +2413,6 @@ async function init(){
   document.getElementById('bud-filter').value = mes;
   document.getElementById('bud-mes').value    = mes;
   document.getElementById('loading-overlay').style.display = 'none';
-  // App starts at login screen
 }
 
 init();
