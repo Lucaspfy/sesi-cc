@@ -529,6 +529,93 @@
     .cal-time-cell { height:48px; display:flex; align-items:flex-start; padding:2px 6px 0 0; font-size:10.5px; color:var(--text-muted); border-bottom:1px solid var(--brd); box-sizing:border-box; justify-content:flex-end; }
     .cal-month-cell { min-height:82px; padding:5px; cursor:pointer; border-right:1px solid var(--brd); border-bottom:1px solid var(--brd); transition:background .12s; }
     .cal-month-cell:hover { background:var(--p50) !important; }
+
+    /* ══════════════════════════════════════════════
+       RESPONSIVO — CELULARES (≤ 768px)
+    ══════════════════════════════════════════════ */
+    @media (max-width: 768px) {
+
+      /* ── Header ── */
+      .hdr { flex-wrap: wrap; padding: 0 14px; }
+      .hdr-brand { order: 1; padding: 10px 0; }
+      .hdr-sep { display: none; }
+      .hdr-user {
+        order: 2; margin-left: auto; padding: 10px 0 10px 10px;
+      }
+      .hdr-user-name { display: none; }
+      .hdr-user-perfil { display: none; }
+      .tabs {
+        order: 3; width: calc(100% + 28px); margin: 0 -14px;
+        overflow-x: auto; overflow-y: hidden;
+        scrollbar-width: none; -webkit-overflow-scrolling: touch;
+        border-top: 1px solid rgba(255,255,255,.12);
+      }
+      .tabs::-webkit-scrollbar { display: none; }
+      .tab-btn { padding: 0 13px; font-size: 12px; flex-shrink: 0; }
+      .tab-btn .tab-icon { display: none; }
+
+      /* ── Conteúdo ── */
+      .content { padding: 14px; }
+
+      /* ── Grids ── */
+      .g2, .g3, .g4 { grid-template-columns: 1fr; }
+      .split { grid-template-columns: 1fr; }
+
+      /* ── Cards de resumo ── */
+      .sum-cards { grid-template-columns: 1fr 1fr; }
+
+      /* ── Cotações ── */
+      .orc-grid { grid-template-columns: 1fr; }
+
+      /* ── Formulário de item da OC ── */
+      .oc-item-row2 { grid-template-columns: 1fr 1fr !important; }
+      .oc-item-row2 > button { grid-column: 1 / -1; }
+
+      /* ── Modais grandes (OC) ── */
+      .overlay { padding: 0; align-items: flex-end; }
+      .modal {
+        border-radius: var(--rxl) var(--rxl) 0 0;
+        max-height: 92vh; overflow-y: auto;
+      }
+
+      /* ── Modais pequenos (CC, sala, reserva, usuário) ── */
+      .cc-overlay { padding: 0; align-items: flex-end; }
+      .cc-modal {
+        max-width: 100%;
+        border-radius: var(--rl) var(--rl) 0 0;
+        max-height: 88vh; overflow-y: auto;
+      }
+
+      /* ── Filtros ── */
+      .finput { min-width: 100%; width: 100%; }
+      .filters { gap: 8px; }
+
+      /* ── User row (config) ── */
+      .user-row { flex-wrap: wrap; gap: 8px; }
+
+      /* ── Budget row ── */
+      .bud-val { min-width: auto; }
+
+      /* ── Calendário ── */
+      .cal-nav-title { min-width: 140px; font-size: 12.5px; }
+      .cal-controls { gap: 8px; }
+
+      /* ── Toast ── */
+      .toast { right: 12px; left: 12px; max-width: none; bottom: 14px; }
+
+      /* ── Tabelas — hint de scroll horizontal ── */
+      .twrap::after {
+        content: ''; display: block; height: 0;
+      }
+    }
+
+    @media (max-width: 480px) {
+      /* Telas muito pequenas */
+      .sum-cards { grid-template-columns: 1fr; }
+      .sum-val { font-size: 18px; }
+      .hdr-info p { display: none; }
+      .cal-view-btn { padding: 5px 10px; font-size: 11.5px; }
+    }
   </style>
 </head>
 <body>
@@ -979,7 +1066,7 @@
               <input type="number" class="fc" id="oc-item-val" placeholder="0,00" min="0" step="0.01" oninput="calcOCItemTotal()">
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:flex-end">
+          <div class="oc-item-row2" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:flex-end">
             <div class="fg" style="margin-bottom:0">
               <label class="label">Quantidade</label>
               <input type="number" class="fc" id="oc-item-qtd" placeholder="0" min="0.001" step="any" oninput="calcOCItemTotal()">
