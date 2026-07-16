@@ -636,16 +636,17 @@
             <div class="g2">
               <div class="fg">
                 <label class="label">Centro de Custo</label>
-                <select class="fc" id="bud-cc"></select>
+                <select class="fc" id="bud-cc" onchange="updateBudInfo()"></select>
               </div>
               <div class="fg">
                 <label class="label">Mês / Ano</label>
-                <input type="month" class="fc" id="bud-mes">
+                <input type="month" class="fc" id="bud-mes" onchange="updateBudInfo()">
               </div>
             </div>
             <div class="fg">
               <label class="label">Valor Previsto (R$)</label>
               <input type="number" class="fc" id="bud-val" placeholder="0,00" min="0" step="0.01">
+              <div id="bud-info" style="font-size:12px;margin-top:6px;min-height:18px"></div>
             </div>
             <button class="btn btn-primary" onclick="saveBudget()">Salvar Budget</button>
           </div>
@@ -813,10 +814,7 @@
       <div class="cc-modal-body" style="display:flex;flex-direction:column;gap:14px">
         <div class="fg">
           <label class="label">Sala</label>
-          <select class="fc" id="res-sala">
-            <option value="treinamento">Sala de Treinamento</option>
-            <option value="amostras">Sala de Amostras/Clientes</option>
-          </select>
+          <select class="fc" id="res-sala"></select>
         </div>
         <div class="fg">
           <label class="label">Data</label>
@@ -856,9 +854,13 @@
           <label class="label">Nome do evento / reunião</label>
           <input type="text" class="fc" id="res-evento" placeholder="Ex: Treinamento Setor Comercial">
         </div>
+        <div id="res-readonly-notice" style="display:none;background:var(--amber-bg);border:1px solid var(--amber-border);
+          color:#92400e;border-radius:var(--r);padding:8px 12px;font-size:12px;font-weight:500">
+          🔒 Você não tem permissão para editar esta reserva. Apenas o responsável ou Gestão pode alterá-la.
+        </div>
         <div class="flex gap8" style="margin-top:4px;align-items:center">
-          <button class="btn btn-primary btn-sm" onclick="saveReserva()">✔ Salvar</button>
-          <button class="btn btn-ghost btn-sm" onclick="closeReservaModal()">Cancelar</button>
+          <button id="res-save-btn" class="btn btn-primary btn-sm" onclick="saveReserva()">✔ Salvar</button>
+          <button class="btn btn-ghost btn-sm" onclick="closeReservaModal()">Fechar</button>
           <div style="flex:1"></div>
           <button id="res-del-btn" class="btn btn-sm"
             style="background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);display:none"
@@ -886,6 +888,15 @@
         </div>
       </div>
 
+      <div class="stitle">Salas de Reunião</div>
+      <div class="card mb16">
+        <div class="card-hdr">
+          <span class="card-title">Salas cadastradas</span>
+          <button class="btn btn-primary btn-sm" onclick="openSalaForm(null)">+ Nova Sala</button>
+        </div>
+        <div id="sala-list"></div>
+      </div>
+
       <div class="stitle">Gerenciamento de Usuários</div>
       <div class="card">
         <div class="card-hdr">
@@ -900,6 +911,34 @@
 </main>
 
 <!-- ═══════════════════════════════ NOVA OC MODAL ═══════════════════════════════ -->
+<!-- ══════════════════ SALA MODAL ══════════════════ -->
+<div class="cc-overlay" id="sala-overlay" onclick="if(event.target===this)closeSalaForm()">
+  <div class="cc-modal" style="max-width:420px">
+    <div class="cc-modal-hdr">
+      <span class="cc-modal-title" id="sala-modal-title">Nova Sala</span>
+      <button class="modal-close" onclick="closeSalaForm()">✕</button>
+    </div>
+    <div class="cc-modal-body" style="display:flex;flex-direction:column;gap:14px">
+      <input type="hidden" id="sala-eid">
+      <div class="fg">
+        <label class="label">Nome da Sala</label>
+        <input type="text" class="fc" id="sala-nome" placeholder="Ex: Sala de Reunião Principal">
+      </div>
+      <div class="fg">
+        <label class="label">Cor de identificação</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="color" id="sala-cor" value="#9333ea" style="width:48px;height:36px;padding:2px;border:1px solid var(--brd);border-radius:var(--r);cursor:pointer;background:none">
+          <span style="font-size:12px;color:var(--text-muted)">Escolha uma cor para identificar a sala no calendário</span>
+        </div>
+      </div>
+      <div class="flex gap8" style="margin-top:4px">
+        <button class="btn btn-primary btn-sm" onclick="saveSala()">✔ Salvar</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeSalaForm()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="oc-modal-overlay" onclick="handleOCOverlayClick(event)">
   <div class="modal" id="oc-modal-box">
     <div class="modal-hdr">
@@ -936,14 +975,14 @@
               <input type="text" class="fc" id="oc-item-desc" placeholder="Descreva o item ou serviço...">
             </div>
             <div class="fg" style="margin-bottom:0">
-              <label class="label">Valor Estimado (R$)</label>
-              <input type="number" class="fc" id="oc-item-val" placeholder="0,00" min="0" step="0.01">
+              <label class="label">Valor Unitário (R$)</label>
+              <input type="number" class="fc" id="oc-item-val" placeholder="0,00" min="0" step="0.01" oninput="calcOCItemTotal()">
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:flex-end">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:flex-end">
             <div class="fg" style="margin-bottom:0">
               <label class="label">Quantidade</label>
-              <input type="number" class="fc" id="oc-item-qtd" placeholder="0" min="0.001" step="any">
+              <input type="number" class="fc" id="oc-item-qtd" placeholder="0" min="0.001" step="any" oninput="calcOCItemTotal()">
             </div>
             <div class="fg" style="margin-bottom:0">
               <label class="label">Unidade</label>
@@ -962,7 +1001,11 @@
                 <option value="sv">sv — Serviço</option>
               </select>
             </div>
-            <button type="button" class="btn btn-sec" onclick="addOCItem()">+ Adicionar</button>
+            <div class="fg" style="margin-bottom:0">
+              <label class="label">Total do Item</label>
+              <input type="text" class="fc" id="oc-item-total" placeholder="R$ 0,00" readonly style="background:var(--gray-100);font-weight:600;color:var(--p700)">
+            </div>
+            <button type="button" class="btn btn-sec" onclick="addOCItem()" style="align-self:flex-end">+ Adicionar</button>
           </div>
         </div>
         <div id="oc-itens-list"></div>
@@ -1146,7 +1189,7 @@
 // ════════════════════════════════════════════════════════
 //  DATA LAYER
 // ════════════════════════════════════════════════════════
-const K = { cc:'cc', bud:'bud', oc:'oc', orc:'orc', users:'users', om:'om', reservas:'reservas' };
+const K = { cc:'cc', bud:'bud', oc:'oc', orc:'orc', users:'users', om:'om', reservas:'reservas', salas:'salas' };
 
 // ── Auth ──────────────────────────────────────────────
 let currentUser = null;
@@ -1172,7 +1215,7 @@ const SB_HDR = {
 };
 
 // ── Cache em memória ────────────────────────────────────────────────────────
-const DB = { cc:[], bud:[], oc:[], orc:[], users:[], om:[], reservas:[] };
+const DB = { cc:[], bud:[], oc:[], orc:[], users:[], om:[], reservas:[], salas:[] };
 
 const load  = k => DB[k] ?? [];
 const store = (k, v) => { DB[k] = v; _sbPush(k, v); };
@@ -1604,16 +1647,83 @@ function deleteCC(id){
   renderEst();
 }
 
+function updateBudInfo(){
+  const ccId = document.getElementById('bud-cc').value;
+  const mes  = document.getElementById('bud-mes').value;
+  const el   = document.getElementById('bud-info');
+  if(!el) return;
+  if(!ccId || !mes){ el.innerHTML=''; return; }
+  const [y,m] = mes.split('-').map(Number);
+  const cc = getCC(ccId);
+  const parts = [];
+
+  if(cc && cc.pai){
+    const pb = getBud(cc.pai, m, y);
+    if(pb){
+      const siblingsTotal = getCCs()
+        .filter(c => c.pai === cc.pai && c.id !== ccId)
+        .reduce((s,c) => s + calcPrev(c.id,m,y), 0);
+      const myChildrenTotal = getCCs().filter(c=>c.pai===ccId).reduce((s,c)=>s+calcPrev(c.id,m,y),0);
+      const available = pb.val - siblingsTotal - myChildrenTotal;
+      const parentCC  = getCC(cc.pai);
+      parts.push(`<span style="color:${available<0?'var(--red)':'var(--p600)'}">` +
+        `Disponível no pai <strong>${parentCC?.nome||'?'}</strong>: ${R$(available)}</span>`);
+    }
+  }
+
+  const children = getCCs().filter(c=>c.pai===ccId);
+  if(children.length){
+    const childrenTotal = children.reduce((s,c)=>s+calcPrev(c.id,m,y),0);
+    if(childrenTotal>0)
+      parts.push(`<span style="color:var(--text-muted)">Filhos já alocam: <strong>${R$(childrenTotal)}</strong></span>`);
+  }
+
+  el.innerHTML = parts.join(' &nbsp;·&nbsp; ');
+}
+
 function saveBudget(){
   const ccId = document.getElementById('bud-cc').value;
   const mes  = document.getElementById('bud-mes').value;
   const val  = parseFloat(document.getElementById('bud-val').value);
   if(!ccId||!mes||isNaN(val)||val<0){ toast('Preencha todos os campos do budget.','error'); return; }
   const [y,m] = mes.split('-').map(Number);
+
+  const cc = getCC(ccId);
+
+  // ── Restrição 1: não ultrapassar o budget do CC pai ──────────────────────
+  if(cc && cc.pai){
+    const pb = getBud(cc.pai, m, y);
+    if(pb){
+      const siblingsTotal = getCCs()
+        .filter(c => c.pai === cc.pai && c.id !== ccId)
+        .reduce((s,c) => s + calcPrev(c.id,m,y), 0);
+      const myChildrenTotal = getCCs().filter(c=>c.pai===ccId).reduce((s,c)=>s+calcPrev(c.id,m,y),0);
+      const newTotal = siblingsTotal + val + myChildrenTotal;
+      if(newTotal > pb.val){
+        const parentCC = getCC(cc.pai);
+        toast(`Budget excede o orçamento do pai "${parentCC?.nome||cc.pai}" (${R$(pb.val)}). `+
+              `Demais filhos já alocam ${R$(siblingsTotal+myChildrenTotal)} — máximo disponível: ${R$(pb.val-siblingsTotal-myChildrenTotal)}.`,'error');
+        return;
+      }
+    }
+  }
+
+  // ── Restrição 2: budget do pai não pode ser menor que a soma dos filhos ──
+  const children = getCCs().filter(c=>c.pai===ccId);
+  if(children.length){
+    const childrenTotal = children.reduce((s,c)=>s+calcPrev(c.id,m,y),0);
+    if(childrenTotal > val){
+      toast(`Budget (${R$(val)}) menor que a soma já alocada nos CCs filhos (${R$(childrenTotal)}). `+
+            `Reduza os budgets dos filhos primeiro ou aumente este valor.`,'error');
+      return;
+    }
+  }
+
   const ex = getBud(ccId,m,y);
   saveBud_({id:ex?ex.id:uid(), cc_id:ccId, mes:m, ano:y, val});
   toast('Budget salvo!','success');
   document.getElementById('bud-val').value='';
+  updateBudInfo();
   renderBudgetList();
 }
 
@@ -1773,7 +1883,8 @@ function renderOCItemList(){
           <th>Descrição</th>
           <th class="tr" style="width:70px">Qtd</th>
           <th style="width:55px">Und</th>
-          <th class="tr" style="width:120px">Valor Est.</th>
+          <th class="tr" style="width:110px">Vlr Unit.</th>
+          <th class="tr" style="width:120px">Total Item</th>
           <th style="width:36px"></th>
         </tr></thead>
         <tbody>
@@ -1782,11 +1893,12 @@ function renderOCItemList(){
             <td>${it.desc}</td>
             <td class="tr">${it.qtd}</td>
             <td>${it.und}</td>
+            <td class="tr">${R$(it.vunit ?? (it.qtd ? it.val/it.qtd : 0))}</td>
             <td class="tr" style="font-weight:600;color:var(--p700)">${R$(it.val)}</td>
             <td><button class="btn btn-danger btn-xs" onclick="removeOCItem(${i})">✕</button></td>
           </tr>`).join('')}
           <tr class="oc-itens-total">
-            <td colspan="4" style="font-size:12px;color:var(--p800);text-align:right;padding-right:10px">Total Estimado</td>
+            <td colspan="5" style="font-size:12px;color:var(--p800);text-align:right;padding-right:10px">Total Estimado</td>
             <td class="tr" style="color:var(--p700)">${R$(total)}</td>
             <td></td>
           </tr>
@@ -1795,18 +1907,27 @@ function renderOCItemList(){
     </div>`;
 }
 
+function calcOCItemTotal(){
+  const qtd   = parseFloat(document.getElementById('oc-item-qtd').value) || 0;
+  const vunit = parseFloat(document.getElementById('oc-item-val').value) || 0;
+  const el    = document.getElementById('oc-item-total');
+  if(el) el.value = (qtd > 0 && vunit > 0) ? R$(qtd * vunit) : '';
+}
+
 function addOCItem(){
-  const desc = document.getElementById('oc-item-desc').value.trim();
-  const qtd  = parseFloat(document.getElementById('oc-item-qtd').value);
-  const und  = document.getElementById('oc-item-und').value;
-  const val  = parseFloat(document.getElementById('oc-item-val').value);
-  if(!desc || isNaN(qtd) || qtd<=0 || isNaN(val) || val<=0){
-    toast('Preencha descrição, quantidade e valor do item.','error'); return;
+  const desc  = document.getElementById('oc-item-desc').value.trim();
+  const qtd   = parseFloat(document.getElementById('oc-item-qtd').value);
+  const und   = document.getElementById('oc-item-und').value;
+  const vunit = parseFloat(document.getElementById('oc-item-val').value);
+  if(!desc || isNaN(qtd) || qtd<=0 || isNaN(vunit) || vunit<=0){
+    toast('Preencha descrição, quantidade e valor unitário do item.','error'); return;
   }
-  ocItens.push({id: uid(), desc, qtd, und, val});
+  ocItens.push({id: uid(), desc, qtd, und, vunit, val: qtd * vunit});
   document.getElementById('oc-item-desc').value='';
   document.getElementById('oc-item-qtd').value='';
   document.getElementById('oc-item-val').value='';
+  const el = document.getElementById('oc-item-total');
+  if(el) el.value = '';
   renderOCItemList();
 }
 
@@ -2303,8 +2424,66 @@ function restoreData(event){
 // ════════════════════════════════════════════════════════
 //  CONFIGURAÇÕES — USUÁRIOS
 // ════════════════════════════════════════════════════════
+// ── Salas CRUD ───────────────────────────────────────────────────────────────
+function renderSalaList(){
+  const el = document.getElementById('sala-list');
+  if(!el) return;
+  const salas = getSalas();
+  if(!salas.length){
+    el.innerHTML = `<div class="empty" style="padding:24px"><p>Nenhuma sala cadastrada.</p></div>`;
+    return;
+  }
+  el.innerHTML = salas.map(s=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--brd)">
+      <div style="width:20px;height:20px;border-radius:50%;background:${s.cor};flex-shrink:0;border:2px solid rgba(0,0,0,.08)"></div>
+      <span style="flex:1;font-weight:500">${s.nome}</span>
+      <button class="btn btn-ghost btn-xs" onclick="openSalaForm('${s.id}')">✎ Editar</button>
+      <button class="btn btn-danger btn-xs" onclick="deleteSala('${s.id}')">✕</button>
+    </div>`).join('');
+}
+
+function openSalaForm(id){
+  const s = id ? getSalaById(id) : null;
+  document.getElementById('sala-modal-title').textContent = s ? 'Editar Sala' : 'Nova Sala';
+  document.getElementById('sala-eid').value   = s?.id || '';
+  document.getElementById('sala-nome').value  = s?.nome || '';
+  document.getElementById('sala-cor').value   = s?.cor || '#9333ea';
+  document.getElementById('sala-overlay').classList.add('open');
+}
+
+function closeSalaForm(){ document.getElementById('sala-overlay').classList.remove('open'); }
+
+function saveSala(){
+  const id   = document.getElementById('sala-eid').value;
+  const nome = document.getElementById('sala-nome').value.trim();
+  const cor  = document.getElementById('sala-cor').value;
+  if(!nome){ toast('Informe o nome da sala.','error'); return; }
+  const salas = getSalas();
+  if(salas.find(s => s.nome.toLowerCase()===nome.toLowerCase() && s.id!==id)){
+    toast('Já existe uma sala com este nome.','error'); return;
+  }
+  const sala = { id: id||uid(), nome, cor };
+  const idx  = salas.findIndex(s=>s.id===sala.id);
+  idx>=0 ? salas[idx]=sala : salas.push(sala);
+  store(K.salas, salas);
+  closeSalaForm();
+  toast('Sala salva!','success');
+  renderSalaList();
+}
+
+function deleteSala(id){
+  if(getReservas().some(r=>r.sala===id)){
+    toast('Esta sala possui reservas. Cancele-as antes de excluir.','error'); return;
+  }
+  if(!confirm('Deseja excluir esta sala?')) return;
+  store(K.salas, getSalas().filter(s=>s.id!==id));
+  toast('Sala removida.','success');
+  renderSalaList();
+}
+
 function renderConfig(){
   const users = load(K.users);
+  renderSalaList();
   const el = document.getElementById('user-list');
   if(!users.length){
     el.innerHTML=`<div class="empty" style="padding:28px"><p>Nenhum usuário cadastrado.</p></div>`;
@@ -2397,9 +2576,15 @@ function deleteUser(id){
 // ════════════════════════════════════════════════════════
 //  SALAS DE REUNIÃO
 // ════════════════════════════════════════════════════════
-const SALA_LABELS = { treinamento:'Sala de Treinamento', amostras:'Sala de Amostras/Clientes' };
-const SALA_COLOR  = { treinamento:'#9333ea', amostras:'#2563eb' };
-const SALA_BG     = { treinamento:'rgba(147,51,234,.15)', amostras:'rgba(37,99,235,.15)' };
+const getSalas     = () => load(K.salas);
+const getSalaById  = id => getSalas().find(s => s.id === id);
+const getSalaLabel = id => getSalaById(id)?.nome || id;
+const getSalaColor = id => getSalaById(id)?.cor || '#6b7280';
+function getSalaBg(id){
+  const hex = getSalaColor(id);
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},0.15)`;
+}
 
 let slView   = 'semana';
 let slDate   = new Date();
@@ -2413,7 +2598,7 @@ const startOfWeek  = d => { const r=new Date(d); const dow=r.getDay(); r.setDate
 const SL_DOW_S     = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 const SL_DOW_L     = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
 const SL_MON       = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-const PX_HR        = 48;
+const PX_HR        = 96;   // 48px por slot de 30min → 96px por hora
 const CAL_START    = 7*60; // 7:00 em minutos
 const CAL_SLOTS    = 27;   // slots de 30 min de 7:00 a 20:00
 
@@ -2459,8 +2644,7 @@ function renderSalas(){
       <button class="btn btn-primary btn-sm" onclick="openReservaModal(null)">+ Nova Reserva</button>
     </div>
     <div class="cal-legend">
-      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#9333ea"></div>Sala de Treinamento</div>
-      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#2563eb"></div>Sala de Amostras/Clientes</div>
+      ${getSalas().map(s=>`<div class="cal-legend-item"><div class="cal-legend-dot" style="background:${s.cor}"></div>${s.nome}</div>`).join('')}
     </div>`;
 
   if(slView==='semana')      html += slRenderWeek(today);
@@ -2480,6 +2664,33 @@ function slTimeCells(){
     h += `<div class="cal-time-cell">${lbl}</div>`;
   }
   return h;
+}
+
+// ── Layout de colunas para eventos sobrepostos ──────────────────────────────
+function slLayoutEvents(events){
+  // Ordena por horário de início
+  const sorted = [...events].sort((a,b) => timeToMin(a.inicio) - timeToMin(b.inicio));
+  const colEnds = []; // momento de término do último evento em cada coluna
+  const laid = [];
+
+  for(const ev of sorted){
+    const start = timeToMin(ev.inicio);
+    // Procura primeira coluna disponível
+    let col = colEnds.findIndex(t => start >= t);
+    if(col === -1){ col = colEnds.length; colEnds.push(0); }
+    colEnds[col] = timeToMin(ev.fim);
+    laid.push({...ev, _col: col});
+  }
+
+  // Para cada evento, determina o nº de colunas do seu grupo de sobreposição
+  for(const ev of laid){
+    const s = timeToMin(ev.inicio), e = timeToMin(ev.fim);
+    const maxCol = Math.max(...laid
+      .filter(o => timeToMin(o.inicio) < e && timeToMin(o.fim) > s)
+      .map(o => o._col));
+    ev._span = maxCol + 1;
+  }
+  return laid;
 }
 
 // ── SEMANA ──────────────────────────────────────────────────────────────────
@@ -2507,13 +2718,17 @@ function slRenderWeek(today){
     const dayRes = res.filter(r=>r.data===iso);
     cols += `<div style="flex:1;min-width:110px;position:relative;border-left:1px solid var(--brd);background:${isT?'rgba(168,85,247,.03)':''}">`;
     for(let s=0;s<CAL_SLOTS;s++) cols+=`<div style="height:48px;border-bottom:1px solid var(--brd);box-sizing:border-box"></div>`;
-    dayRes.forEach(r=>{
+    slLayoutEvents(dayRes).forEach(r=>{
       const top=(timeToMin(r.inicio)-CAL_START)*(PX_HR/60);
       const hgt=(timeToMin(r.fim)-timeToMin(r.inicio))*(PX_HR/60);
+      const pct=100/r._span;
+      const left=`calc(${r._col*pct}% + 2px)`;
+      const width=`calc(${pct}% - 4px)`;
       cols+=`<div class="cal-event-block" onclick="openReservaModal('${r.id}')"
-        style="top:${top}px;height:${Math.max(hgt,22)}px;background:${SALA_BG[r.sala]};border-left:3px solid ${SALA_COLOR[r.sala]}">
-        <div style="font-weight:700;color:${SALA_COLOR[r.sala]};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.evento}</div>
-        ${hgt>=40?`<div style="color:${SALA_COLOR[r.sala]};opacity:.8;font-size:10px">${r.inicio}–${r.fim} · ${r.responsavel}</div>`:''}
+        style="top:${top}px;height:${Math.max(hgt,22)}px;left:${left};width:${width};right:auto;
+               background:${getSalaBg(r.sala)};border-left:3px solid ${getSalaColor(r.sala)}">
+        <div style="font-weight:700;color:${getSalaColor(r.sala)};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.evento}</div>
+        ${hgt>=40?`<div style="color:${getSalaColor(r.sala)};opacity:.8;font-size:10px">${r.inicio}–${r.fim} · ${r.responsavel}</div>`:''}
       </div>`;
     });
     cols+='</div>';
@@ -2531,32 +2746,36 @@ function slRenderWeek(today){
 function slRenderDay(today){
   const iso  = isoDate(slDate);
   const res  = getReservas().filter(r=>r.data===iso);
-  const salas= ['treinamento','amostras'];
+  const salas = getSalas();
 
   let hdr = `<div style="background:var(--card);border-bottom:2px solid var(--brd);padding:8px 0"></div>`;
   salas.forEach(s=>{ hdr+=`<div style="border-left:1px solid var(--brd);border-bottom:2px solid var(--brd);
-    padding:10px;text-align:center;font-size:13px;font-weight:700;color:${SALA_COLOR[s]};background:var(--card)">
-    ${SALA_LABELS[s]}</div>`; });
+    padding:10px;text-align:center;font-size:13px;font-weight:700;color:${s.cor};background:var(--card)">
+    ${s.nome}</div>`; });
 
   let cols = `<div style="display:flex;flex-direction:column">${slTimeCells()}</div>`;
   salas.forEach(s=>{
-    const sRes = res.filter(r=>r.sala===s);
+    const sRes = res.filter(r=>r.sala===s.id);
     cols+=`<div style="flex:1;position:relative;border-left:1px solid var(--brd)">`;
     for(let i=0;i<CAL_SLOTS;i++) cols+=`<div style="height:48px;border-bottom:1px solid var(--brd)"></div>`;
-    sRes.forEach(r=>{
+    slLayoutEvents(sRes).forEach(r=>{
       const top=(timeToMin(r.inicio)-CAL_START)*(PX_HR/60);
       const hgt=(timeToMin(r.fim)-timeToMin(r.inicio))*(PX_HR/60);
+      const pct=100/r._span;
+      const left=`calc(${r._col*pct}% + 2px)`;
+      const width=`calc(${pct}% - 4px)`;
       cols+=`<div class="cal-event-block" onclick="openReservaModal('${r.id}')"
-        style="top:${top}px;height:${Math.max(hgt,26)}px;background:${SALA_BG[s]};border-left:3px solid ${SALA_COLOR[s]}">
-        <div style="font-weight:700;color:${SALA_COLOR[s]}">${r.evento}</div>
-        <div style="color:${SALA_COLOR[s]};opacity:.8;font-size:10px">${r.inicio}–${r.fim} · ${r.responsavel}</div>
+        style="top:${top}px;height:${Math.max(hgt,26)}px;left:${left};width:${width};right:auto;
+               background:${getSalaBg(s.id)};border-left:3px solid ${s.cor}">
+        <div style="font-weight:700;color:${s.cor}">${r.evento}</div>
+        <div style="color:${s.cor};opacity:.8;font-size:10px">${r.inicio}–${r.fim} · ${r.responsavel}</div>
       </div>`;
     });
     cols+='</div>';
   });
 
   return `<div class="cal-outer" style="overflow-y:auto;max-height:640px">
-    <div style="display:grid;grid-template-columns:52px 1fr 1fr">
+    <div style="display:grid;grid-template-columns:52px ${salas.map(()=>'1fr').join(' ')}">
       ${hdr}
       <div style="display:contents">${cols}</div>
     </div>
@@ -2591,7 +2810,7 @@ function slRenderMonth(today){
     dr.slice(0,3).forEach(r=>{
       html+=`<div style="font-size:10.5px;border-radius:3px;padding:1px 5px;margin-bottom:2px;
         overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:#fff;font-weight:500;
-        background:${SALA_COLOR[r.sala]}" title="${SALA_LABELS[r.sala]}: ${r.evento} (${r.inicio}–${r.fim})">${r.evento}</div>`;
+        background:${getSalaColor(r.sala)}" title="${getSalaLabel(r.sala)}: ${r.evento} (${r.inicio}–${r.fim})">${r.evento}</div>`;
     });
     if(dr.length>3) html+=`<div style="font-size:10px;color:var(--text-muted)">+${dr.length-3} mais</div>`;
     html+='</div>';
@@ -2619,15 +2838,30 @@ function slGoDay(iso){ slDate=new Date(iso+'T12:00:00'); slView='dia'; renderSal
 function openReservaModal(id){
   slEditId = id || null;
   const r = slEditId ? getReservas().find(x=>x.id===slEditId) : null;
-  document.getElementById('reserva-modal-title').textContent = r ? 'Editar Reserva' : 'Nova Reserva';
-  document.getElementById('res-sala').value   = r?.sala    || 'treinamento';
+
+  const canEdit = !r || !r.criadoPor ||
+    currentUser?.login === r.criadoPor || currentUser?.perfil === 'gestao';
+
+  document.getElementById('reserva-modal-title').textContent =
+    r ? (canEdit ? 'Editar Reserva' : 'Detalhes da Reserva') : 'Nova Reserva';
+
+  const salaSel = document.getElementById('res-sala');
+  salaSel.innerHTML = getSalas().map(s=>`<option value="${s.id}">${s.nome}</option>`).join('');
+  salaSel.value = r?.sala || (getSalas()[0]?.id || '');
   document.getElementById('res-data').value   = r?.data    || isoDate(slDate);
   document.getElementById('res-inicio').value = r?.inicio  || '08:00';
   document.getElementById('res-fim').value    = r?.fim     || '09:00';
   document.getElementById('res-resp').value   = r?.responsavel || '';
   document.getElementById('res-evento').value = r?.evento  || '';
-  const canDel = r && (currentUser?.login===r.criadoPor || currentUser?.perfil==='gestao');
-  document.getElementById('res-del-btn').style.display = canDel ? '' : 'none';
+
+  // Habilita/desabilita campos conforme permissão
+  ['res-sala','res-data','res-inicio','res-fim','res-resp','res-evento']
+    .forEach(fid => { document.getElementById(fid).disabled = !canEdit; });
+
+  document.getElementById('res-save-btn').style.display    = canEdit ? '' : 'none';
+  document.getElementById('res-del-btn').style.display     = (r && canEdit) ? '' : 'none';
+  document.getElementById('res-readonly-notice').style.display = (!canEdit && r) ? '' : 'none';
+
   document.getElementById('reserva-overlay').classList.add('open');
 }
 
@@ -2637,6 +2871,12 @@ function closeReservaModal(){
 }
 
 function saveReserva(){
+  if(slEditId){
+    const r = getReservas().find(x=>x.id===slEditId);
+    if(r && r.criadoPor && currentUser?.login!==r.criadoPor && currentUser?.perfil!=='gestao'){
+      toast('Sem permissão para editar esta reserva.','error'); return;
+    }
+  }
   const sala   = document.getElementById('res-sala').value;
   const data   = document.getElementById('res-data').value;
   const inicio = document.getElementById('res-inicio').value;
@@ -2646,7 +2886,7 @@ function saveReserva(){
   if(!sala||!data||!inicio||!fim||!resp||!evento){ toast('Preencha todos os campos.','error'); return; }
   if(timeToMin(fim)<=timeToMin(inicio)){ toast('Término deve ser após o início.','error'); return; }
   if(reservaConflita(sala,data,inicio,fim,slEditId)){
-    toast(`Conflito: ${SALA_LABELS[sala]} já está reservada nesse horário.`,'error'); return;
+    toast(`Conflito: "${getSalaLabel(sala)}" já está reservada nesse horário.`,'error'); return;
   }
   const all = getReservas();
   if(slEditId){
@@ -2799,11 +3039,20 @@ function seedUsers(){
   ]);
 }
 
+function seedSalas(){
+  if(getSalas().length > 0) return;
+  store(K.salas, [
+    { id:'treinamento', nome:'Sala de Treinamento',       cor:'#9333ea' },
+    { id:'amostras',    nome:'Sala de Amostras/Clientes', cor:'#2563eb' },
+  ]);
+}
+
 async function init(){
   await initDB();  // carrega dados do Supabase → DB cache
   initRealtime();  // escuta mudanças em tempo real
   seed();
   seedUsers();
+  seedSalas();
   const n   = new Date();
   const mes = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
   document.getElementById('ger-mes').value    = mes;
