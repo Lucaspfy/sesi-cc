@@ -1110,6 +1110,21 @@
         </div>
       </div>
 
+      <div class="fg">
+        <label class="label">Observações <span style="font-weight:400;color:var(--text-muted)">(opcional)</span></label>
+        <textarea class="fc" id="oc-obs" rows="3" placeholder="Links de referência, detalhes adicionais... Ex: https://www.mercadolivre.com.br/..." style="resize:vertical;min-height:72px"></textarea>
+      </div>
+
+      <div class="fg">
+        <label class="label">Anexo <span style="font-weight:400;color:var(--text-muted)">(opcional — PDF ou imagem, máx. 500 KB)</span></label>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <input type="file" id="oc-anexo-input" accept=".pdf,.jpg,.jpeg,.png,.webp" style="display:none" onchange="handleAnexoSelect(this)">
+          <button type="button" class="btn btn-sec btn-sm" onclick="document.getElementById('oc-anexo-input').click()">📎 Selecionar arquivo</button>
+          <span id="oc-anexo-nome" style="font-size:12px;color:var(--text-muted)">Nenhum arquivo selecionado</span>
+          <button type="button" id="oc-anexo-rm" onclick="clearAnexo()" class="btn btn-ghost btn-sm" style="display:none;color:var(--red)">✕ Remover</button>
+        </div>
+      </div>
+
       <hr class="sep">
 
       <div class="flex aic jcb">
@@ -1138,6 +1153,13 @@
       <!-- OC INFO -->
       <div class="modal-section">
         <div class="g4" id="m-info" style="grid-template-columns:1fr 1fr 1fr 1fr"></div>
+      </div>
+
+      <!-- OBSERVAÇÕES -->
+      <div class="modal-section" id="m-obs-section" style="display:none">
+        <hr class="sep" style="margin-top:0;margin-bottom:14px">
+        <div class="modal-section-title" style="margin-bottom:10px"><span>📝</span> Observações</div>
+        <div id="m-obs-content"></div>
       </div>
 
       <hr class="sep" style="margin-top:0">
@@ -1939,8 +1961,12 @@ function openOCModal(){
   refreshCCSelects();
   ocItens = [];
   renderOCItemList();
-  ['oc-sol','oc-setor','oc-just'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['oc-sol','oc-setor','oc-just','oc-obs'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   const ccEl = document.getElementById('oc-cc'); if(ccEl) ccEl.value='';
+  ocAnexo = null;
+  const anexoInp = document.getElementById('oc-anexo-input'); if(anexoInp) anexoInp.value='';
+  const anexoNome = document.getElementById('oc-anexo-nome'); if(anexoNome) anexoNome.textContent='Nenhum arquivo selecionado';
+  const anexoRm = document.getElementById('oc-anexo-rm'); if(anexoRm) anexoRm.style.display='none';
   const d = new Date(); d.setDate(d.getDate()+7);
   document.getElementById('oc-dtnec').value = d.toISOString().split('T')[0];
   document.getElementById('oc-modal-overlay').classList.add('open');
@@ -2028,6 +2054,7 @@ function saveOC(){
   const set  = document.getElementById('oc-setor').value.trim();
   const cc   = document.getElementById('oc-cc').value;
   const just = document.getElementById('oc-just').value.trim();
+  const obs  = document.getElementById('oc-obs').value.trim();
   const dtnec= document.getElementById('oc-dtnec').value;
 
   if(!sol||!set||!cc||!dtnec){
@@ -2045,6 +2072,7 @@ function saveOC(){
   const oc = {
     num:genNum(), dtcr:new Date().toISOString().split('T')[0],
     sol, setor:set, cc, itens:ocItens.slice(), desc, val, just, dtnec,
+    obs: obs || null, anexo: ocAnexo || null,
     status:'pendente', dtatual:new Date().toISOString()
   };
   saveOC_(oc);
@@ -2137,6 +2165,34 @@ function renderAcomp(){
 let curOC = null;
 let curOrcItemId = null;
 let ocItens = [];
+let ocAnexo  = null; // { nome, tipo, dados } — base64 do arquivo selecionado
+
+function handleAnexoSelect(input){
+  const file = input.files[0];
+  if(!file) return;
+  if(file.size > 512 * 1024){
+    toast('Arquivo muito grande. Máximo permitido: 500 KB. Para arquivos maiores, cole o link nas Observações.', 'error');
+    input.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    ocAnexo = { nome: file.name, tipo: file.type, dados: e.target.result };
+    document.getElementById('oc-anexo-nome').textContent = file.name;
+    document.getElementById('oc-anexo-rm').style.display = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearAnexo(){
+  ocAnexo = null;
+  const inp = document.getElementById('oc-anexo-input');
+  if(inp) inp.value = '';
+  const nome = document.getElementById('oc-anexo-nome');
+  if(nome) nome.textContent = 'Nenhum arquivo selecionado';
+  const rm = document.getElementById('oc-anexo-rm');
+  if(rm) rm.style.display = 'none';
+}
 const ccCollapsed = new Set();
 
 function openModal(num){
@@ -2217,6 +2273,31 @@ function renderModal(){
     ${infoItem('Data Necessidade',fDate(oc.dtnec),'color:var(--b600);font-weight:600')}
     ${infoItem('Status', badge(oc.status) + (oc.dt_pedido ? `<div style="font-size:10.5px;color:var(--text-muted);margin-top:4px">Pedido em ${fDate(oc.dt_pedido)}</div>` : ''))}
   `;
+
+  // Observations & attachment
+  const obsSection = document.getElementById('m-obs-section');
+  const hasObs = oc.obs && oc.obs.trim();
+  const hasAnexo = oc.anexo && oc.anexo.dados;
+  if(hasObs || hasAnexo){
+    obsSection.style.display = '';
+    let obsHtml = '';
+    if(hasObs){
+      const linked = oc.obs.replace(/(https?:\/\/[^\s<>"]+)/g,
+        '<a href="$1" target="_blank" rel="noopener" style="color:var(--b600);text-decoration:underline;word-break:break-all">$1</a>');
+      obsHtml += `<div style="font-size:13.5px;line-height:1.65;color:var(--text);white-space:pre-wrap;word-break:break-word${hasAnexo?';margin-bottom:12px':''}">${linked}</div>`;
+    }
+    if(hasAnexo){
+      const isImg = oc.anexo.tipo && oc.anexo.tipo.startsWith('image/');
+      if(isImg){
+        obsHtml += `<a href="${oc.anexo.dados}" target="_blank" rel="noopener"><img src="${oc.anexo.dados}" alt="${oc.anexo.nome}" style="max-width:100%;max-height:280px;border-radius:var(--r);border:1px solid var(--border);display:block;cursor:zoom-in"></a>`;
+      } else {
+        obsHtml += `<a href="${oc.anexo.dados}" download="${oc.anexo.nome}" class="btn btn-sec btn-sm" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none">📎 ${oc.anexo.nome}</a>`;
+      }
+    }
+    document.getElementById('m-obs-content').innerHTML = obsHtml;
+  } else {
+    obsSection.style.display = 'none';
+  }
 
   // Items & per-item quotations
   const canEdit = !['pedido','recebido','concluida'].includes(oc.status) && canManage();
