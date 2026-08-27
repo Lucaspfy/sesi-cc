@@ -1603,12 +1603,16 @@ function switchTab(tab,btn){
 // ════════════════════════════════════════════════════════
 //  ACOMPANHAMENTO BI — XLSX
 // ════════════════════════════════════════════════════════
-let biData      = [];
-let biFilters   = {};
-let biPieGrpCP  = 'TipoOperacao';
-let biPieGrpCR  = 'TipoOperacao';
-let _biCharts   = {};
-let _biFileName = '';
+let biData        = [];
+let biFilters     = {};
+let biPieGrpCP    = 'TipoOperacao';
+let biPieGrpCR    = 'TipoOperacao';
+let _biCharts     = {};
+let _biFileName   = '';
+let biFiltersOpen = false;
+
+function _countActiveFilters(){ return Object.values(biFilters).reduce((s,v)=>s+(v?.size||0),0); }
+function toggleBIFiltersPanel(){ biFiltersOpen=!biFiltersOpen; _biRenderFilters(); }
 
 const BI_CAT_FILTERS = [
   {col:'TipoOperacao',      label:'Tipo Operação'},
@@ -1703,7 +1707,7 @@ function renderBI(){
         <button class="btn btn-ghost btn-sm" onclick="clearBIFilters()">✕ Limpar filtros</button>
       </div>
     </div>
-    <div id="bi-cards" class="sum-cards" style="margin-bottom:20px"></div>
+    <div id="bi-cards" class="sum-cards" style="margin-bottom:20px;grid-template-columns:repeat(4,1fr)"></div>
     <div id="bi-filters" style="margin-bottom:20px"></div>
     <div class="g2" style="margin-bottom:20px">
       <div class="card" style="padding:18px">
@@ -1776,13 +1780,27 @@ function _biRenderFilters(){
     </div>`;
   }).join('');
 
-  el.innerHTML=`<div style="background:white;border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px">
-    <div class="flex aic jcb" style="margin-bottom:12px">
-      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted)">Filtros Interativos</span>
-      <button class="btn btn-ghost btn-sm" onclick="clearBIFilters()" style="font-size:11px;padding:2px 8px">✕ Limpar tudo</button>
+  const n=_countActiveFilters();
+  const badge=n>0?`<span style="background:var(--p600);color:white;border-radius:20px;padding:1px 8px;font-size:10.5px;font-weight:700;margin-left:8px">${n} ativo${n>1?'s':''}</span>`:'';
+  el.innerHTML=`<div style="background:white;border:1px solid var(--border);border-radius:var(--rl);overflow:hidden">
+    <div class="flex aic jcb" style="padding:12px 16px;cursor:pointer;user-select:none" onclick="toggleBIFiltersPanel()">
+      <div class="flex aic" style="gap:0">
+        <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted)">Filtros Interativos</span>
+        ${badge}
+      </div>
+      <div class="flex aic gap8">
+        ${n>0&&!biFiltersOpen?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();clearBIFilters()" style="font-size:11px;padding:2px 8px">✕ Limpar</button>`:''}
+        <span style="font-size:13px;color:var(--text-muted);transition:.2s;display:inline-block;transform:rotate(${biFiltersOpen?180:0}deg)">▼</span>
+      </div>
     </div>
-    ${catRows}
-    <div style="border-top:1px solid var(--border-sm);margin-top:8px;padding-top:8px">${dateRows}</div>
+    ${biFiltersOpen?`<div style="border-top:1px solid var(--border-sm);padding:14px 16px">
+      <div class="flex aic jcb" style="margin-bottom:12px">
+        <span></span>
+        <button class="btn btn-ghost btn-sm" onclick="clearBIFilters()" style="font-size:11px;padding:2px 8px">✕ Limpar tudo</button>
+      </div>
+      ${catRows}
+      <div style="border-top:1px solid var(--border-sm);margin-top:8px;padding-top:8px">${dateRows}</div>
+    </div>`:''}
   </div>`;
 }
 
@@ -1806,9 +1824,9 @@ function _biRenderCards(){
   const sal=cr-cp;
   const enc=d.reduce((s,r)=>s+_biParseFlt(r.JUROS)+_biParseFlt(r.MULTA),0);
   const c=(icon,lbl,val,stl='')=>`<div class="sum-card">
-    <div class="sum-icon">${icon}</div>
-    <div class="sum-val" style="${stl}">${R$(val)}</div>
-    <div class="sum-sub">${lbl}</div>
+    <div class="sum-icon" style="font-size:16px">${icon}</div>
+    <div class="sum-val" style="font-size:17px;${stl}">${R$(val)}</div>
+    <div class="sum-sub" style="font-size:11px">${lbl}</div>
   </div>`;
   el.innerHTML=`
     ${c('💳','Total Contas a Pagar',cp,'color:var(--red)')}
@@ -1888,7 +1906,8 @@ function _biRenderPie(canvasId,valCol,grpCol){
       datasets:[{
         data:entries.map(([,v])=>v),
         backgroundColor:entries.map((_,i)=>BI_PALETTE[i%BI_PALETTE.length]),
-        borderWidth:1.5, borderColor:'white'
+        borderWidth:1.5, borderColor:'white',
+        radius:'80%'
       }]
     },
     options:{
