@@ -6,6 +6,8 @@
   <title>Fluxo de Compras — Pack to You</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -616,6 +618,23 @@
       .hdr-info p { display: none; }
       .cal-view-btn { padding: 5px 10px; font-size: 11.5px; }
     }
+
+    /* ── BI CHIPS ── */
+    .bi-chip {
+      padding: 3px 11px; border-radius: 20px;
+      border: 1px solid var(--border); background: white;
+      color: var(--text-muted); font-size: 12px; font-weight: 500;
+      cursor: pointer; transition: all .15s; line-height: 1.6; white-space: nowrap;
+    }
+    .bi-chip:hover:not(.bi-active) { background: var(--p50); border-color: var(--p300); color: var(--p700); }
+    .bi-chip.bi-active { background: var(--p600); border-color: var(--p600); color: white; font-weight: 600; }
+    .bi-filter-label {
+      font-size: 10.5px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .06em;
+      white-space: nowrap; min-width: 82px; padding-top: 4px;
+    }
+    .bi-filter-row { display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+    .bi-chip-group { display: flex; flex-wrap: wrap; gap: 5px; }
   </style>
 </head>
 <body>
@@ -1582,66 +1601,311 @@ function switchTab(tab,btn){
 }
 
 // ════════════════════════════════════════════════════════
-//  ACOMPANHAMENTO BI
+//  ACOMPANHAMENTO BI — XLSX
 // ════════════════════════════════════════════════════════
-async function renderBI(){
-  const el = document.getElementById('bi-content');
-  if(!el) return;
+let biData      = [];
+let biFilters   = {};
+let biPieGrpCP  = 'TipoOperacao';
+let biPieGrpCR  = 'TipoOperacao';
+let _biCharts   = {};
+let _biFileName = '';
 
-  // Estado: carregando
-  el.innerHTML = `
-    <div style="position:relative;width:60px;height:60px">
-      <div style="width:60px;height:60px;border-radius:50%;border:3px solid var(--p200);border-top-color:var(--p500);animation:spin 1.2s linear infinite;"></div>
-      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:22px">◉</div>
-    </div>
-    <div style="font-size:13px;color:var(--text-muted)">Verificando conexão com ERIS…</div>`;
+const BI_CAT_FILTERS = [
+  {col:'TipoOperacao',      label:'Tipo Operação'},
+  {col:'Empresa',           label:'Empresa'},
+  {col:'Filial',            label:'Filial'},
+  {col:'CentroCusto',       label:'Centro de Custo'},
+  {col:'Status',            label:'Status'},
+  {col:'Segmento_Terceiro', label:'Segmento'},
+  {col:'Regiao_Terceiro',   label:'Região'},
+  {col:'Estado_Terceiro',   label:'Estado'},
+];
+const BI_PIE_DIMS = [
+  ['TipoOperacao','Tipo Operação'],['Empresa','Empresa'],
+  ['Filial','Filial'],['CentroCusto','Centro de Custo'],
+  ['Segmento_Terceiro','Segmento'],['Regiao_Terceiro','Região'],['Estado_Terceiro','Estado'],
+];
+const BI_MES     = ['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const BI_PALETTE = [
+  '#7c3aed','#e11d48','#059669','#0284c7','#ea580c',
+  '#d97706','#c026d3','#65a30d','#1e40af','#9f1239',
+  '#0d9488','#92400e','#166534','#4a044e','#134e4a',
+];
 
-  try {
-    const res = await fetch('/api/eris');
-    const json = await res.json();
+function _biFmtMes(v){ const n=parseInt(v); return (n>=1&&n<=12)?String(n).padStart(2,'0'):''; }
+function _biParseFlt(v){ const n=parseFloat(String(v||'0').replace(',','.')); return isNaN(n)?0:n; }
 
-    if(!json.ok && json.error === 'not_configured'){
-      _biPendente(el);
-      return;
-    }
-    if(!json.ok){
-      _biErro(el, json.message || 'Erro desconhecido.');
-      return;
-    }
-    // TODO: quando integração estiver ativa, renderizar gráficos com json.data
-    _biPendente(el);
-
-  } catch(_){
-    // Rodando localmente sem Vercel Functions — exibe placeholder
-    _biPendente(el);
-  }
+function handleBIFile(e){
+  const file=e.target.files[0]; if(!file)return;
+  _biFileName=file.name;
+  const reader=new FileReader();
+  reader.onload=evt=>{
+    try{
+      const wb=XLSX.read(new Uint8Array(evt.target.result),{type:'array'});
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{raw:false,defval:''});
+      const MCOLS=['MesFat','MesVenc','MesQuitacao'];
+      rows.forEach(r=>MCOLS.forEach(c=>{ if(r[c]!==''){const n=_biFmtMes(r[c]);if(n)r[c]=n;} }));
+      biData=rows; biFilters={}; biPieGrpCP='TipoOperacao'; biPieGrpCR='TipoOperacao';
+      renderBI();
+      toast(`${biData.length.toLocaleString('pt-BR')} registros carregados!`,'success');
+    }catch(err){ toast('Erro ao ler o XLSX. Verifique o formato.','error'); }
+  };
+  reader.readAsArrayBuffer(file);
 }
 
-function _biPendente(el){
-  el.innerHTML = `
-    <div style="position:relative;width:80px;height:80px">
-      <div style="width:80px;height:80px;border-radius:50%;border:3px solid var(--p200);border-top-color:var(--p500);animation:spin 1.2s linear infinite;"></div>
-      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px">◉</div>
-    </div>
-    <div>
-      <div style="font-family:var(--fh);font-size:17px;font-weight:700;color:var(--text);margin-bottom:8px">Em Desenvolvimento</div>
-      <div style="font-size:13.5px;color:var(--text-muted);max-width:320px;line-height:1.6">
-        Aguardando comunicação com sistema <strong style="color:var(--p600)">ERIS</strong>
+function _biFiltered(){
+  return biData.filter(r=>{
+    for(const [col,vals] of Object.entries(biFilters)){
+      if(!vals||vals.size===0) continue;
+      if(!vals.has(String(r[col]??''))) return false;
+    }
+    return true;
+  });
+}
+
+function toggleBIFilter(col,val){
+  if(!biFilters[col]) biFilters[col]=new Set();
+  biFilters[col].has(val)?biFilters[col].delete(val):biFilters[col].add(val);
+  _biRenderFilters();
+  _biRenderAll();
+}
+
+function clearBIFilters(){ biFilters={}; _biRenderFilters(); _biRenderAll(); }
+
+function renderBI(){
+  Object.keys(_biCharts).forEach(id=>{ try{_biCharts[id].destroy();}catch(_){} delete _biCharts[id]; });
+  const el=document.getElementById('bi-content'); if(!el)return;
+
+  if(!biData.length){
+    el.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:420px;gap:24px;text-align:center';
+    el.innerHTML=`
+      <input type="file" id="bi-file" accept=".xlsx" style="display:none" onchange="handleBIFile(event)">
+      <div style="width:88px;height:88px;border-radius:20px;background:var(--p50);border:2.5px dashed var(--p300);display:flex;align-items:center;justify-content:center;font-size:36px">📊</div>
+      <div>
+        <div style="font-family:var(--fh);font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Acompanhamento BI</div>
+        <div style="font-size:13.5px;color:var(--text-muted);max-width:340px;line-height:1.65">
+          Importe o arquivo <strong>.xlsx</strong> exportado pelo sistema financeiro para visualizar gráficos e filtros interativos.
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="document.getElementById('bi-file').click()">📂 Selecionar arquivo XLSX</button>
+      <div style="font-size:11.5px;color:var(--text-muted)">Os dados são lidos localmente — nenhuma informação é enviada a servidores externos.</div>`;
+    return;
+  }
+
+  el.style.cssText='';
+  el.innerHTML=`
+    <input type="file" id="bi-file" accept=".xlsx" style="display:none" onchange="handleBIFile(event)">
+    <div class="flex aic jcb" style="flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      <div class="stitle" style="margin-bottom:0">Acompanhamento BI</div>
+      <div class="flex aic gap8" style="flex-wrap:wrap">
+        <span style="font-size:12px;color:var(--text-muted)">${biData.length.toLocaleString('pt-BR')} registros · <em>${_biFileName}</em></span>
+        <button class="btn btn-sec btn-sm" onclick="document.getElementById('bi-file').click()">📂 Novo XLSX</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearBIFilters()">✕ Limpar filtros</button>
       </div>
     </div>
-    <div style="background:var(--amber-bg);border:1px solid var(--amber-border);color:#92400e;border-radius:var(--r);padding:10px 18px;font-size:12px;font-weight:500">
-      ⚠️ Integração pendente de configuração
+    <div id="bi-cards" class="sum-cards" style="margin-bottom:20px"></div>
+    <div id="bi-filters" style="margin-bottom:20px"></div>
+    <div class="g2" style="margin-bottom:20px">
+      <div class="card" style="padding:18px">
+        <div style="font-size:11.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">Desembolso por Mês · Data Vencimento</div>
+        <canvas id="bi-bar-venc"></canvas>
+      </div>
+      <div class="card" style="padding:18px">
+        <div style="font-size:11.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">Competência por Mês · Data Faturamento</div>
+        <canvas id="bi-bar-fat"></canvas>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card" style="padding:18px">
+        <div class="flex aic jcb" style="gap:8px;flex-wrap:wrap;margin-bottom:14px">
+          <div style="font-size:11.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">Contas a Pagar · por</div>
+          <select class="fc" style="width:auto;font-size:12px;padding:4px 10px" onchange="biPieGrpCP=this.value;_biRenderPieCP()">
+            ${BI_PIE_DIMS.map(([v,l])=>`<option value="${v}" ${biPieGrpCP===v?'selected':''}>${l}</option>`).join('')}
+          </select>
+        </div>
+        <canvas id="bi-pie-cp"></canvas>
+      </div>
+      <div class="card" style="padding:18px">
+        <div class="flex aic jcb" style="gap:8px;flex-wrap:wrap;margin-bottom:14px">
+          <div style="font-size:11.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">Contas a Receber · por</div>
+          <select class="fc" style="width:auto;font-size:12px;padding:4px 10px" onchange="biPieGrpCR=this.value;_biRenderPieCR()">
+            ${BI_PIE_DIMS.map(([v,l])=>`<option value="${v}" ${biPieGrpCR===v?'selected':''}>${l}</option>`).join('')}
+          </select>
+        </div>
+        <canvas id="bi-pie-cr"></canvas>
+      </div>
     </div>`;
+
+  _biRenderFilters();
+  _biRenderAll();
 }
 
-function _biErro(el, msg){
-  el.innerHTML = `
-    <div style="font-size:36px">⚠️</div>
-    <div>
-      <div style="font-family:var(--fh);font-size:17px;font-weight:700;color:var(--text);margin-bottom:8px">Erro na integração ERIS</div>
-      <div style="font-size:13px;color:var(--text-muted);max-width:360px;line-height:1.6">${msg}</div>
+function _biRenderFilters(){
+  const el=document.getElementById('bi-filters'); if(!el)return;
+
+  const chip=(col,val,label)=>{
+    const active=(biFilters[col]||new Set()).has(val);
+    const safe=val.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return `<button class="bi-chip${active?' bi-active':''}" onclick="toggleBIFilter('${col}','${safe}')">${label}</button>`;
+  };
+
+  const catRows=BI_CAT_FILTERS.map(({col,label})=>{
+    const vals=[...new Set(biData.map(r=>String(r[col]??'')).filter(Boolean))].sort();
+    if(!vals.length) return '';
+    return `<div class="bi-filter-row">
+      <span class="bi-filter-label">${label}</span>
+      <div class="bi-chip-group">${vals.map(v=>chip(col,v,v)).join('')}</div>
     </div>`;
+  }).join('');
+
+  const dateGroups=[
+    {anoCol:'AnoVenc',mesCol:'MesVenc',aLbl:'Ano Venc',mLbl:'Mês Venc'},
+    {anoCol:'AnoFat', mesCol:'MesFat', aLbl:'Ano Fat', mLbl:'Mês Fat'},
+  ];
+  const dateRows=dateGroups.map(({anoCol,mesCol,aLbl,mLbl})=>{
+    const anos=[...new Set(biData.map(r=>String(r[anoCol]||'')).filter(Boolean))].sort();
+    const meses=[...new Set(biData.map(r=>String(r[mesCol]||'')).filter(v=>v&&parseInt(v)>=1&&parseInt(v)<=12))].sort();
+    if(!anos.length) return '';
+    return `<div class="bi-filter-row">
+      <span class="bi-filter-label">${aLbl}</span>
+      <div class="bi-chip-group">${anos.map(a=>chip(anoCol,a,a)).join('')}</div>
+    </div>
+    <div class="bi-filter-row">
+      <span class="bi-filter-label">${mLbl}</span>
+      <div class="bi-chip-group">${meses.map(m=>chip(mesCol,m,BI_MES[parseInt(m)]||m)).join('')}</div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML=`<div style="background:white;border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px">
+    <div class="flex aic jcb" style="margin-bottom:12px">
+      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted)">Filtros Interativos</span>
+      <button class="btn btn-ghost btn-sm" onclick="clearBIFilters()" style="font-size:11px;padding:2px 8px">✕ Limpar tudo</button>
+    </div>
+    ${catRows}
+    <div style="border-top:1px solid var(--border-sm);margin-top:8px;padding-top:8px">${dateRows}</div>
+  </div>`;
 }
+
+function _biDestroyChart(id){
+  if(_biCharts[id]){ try{_biCharts[id].destroy();}catch(_){} delete _biCharts[id]; }
+}
+
+function _biRenderAll(){
+  _biRenderCards();
+  _biRenderBar('bi-bar-venc','AnoVenc','MesVenc');
+  _biRenderBar('bi-bar-fat','AnoFat','MesFat');
+  _biRenderPieCP();
+  _biRenderPieCR();
+}
+
+function _biRenderCards(){
+  const el=document.getElementById('bi-cards'); if(!el)return;
+  const d=_biFiltered();
+  const cp=d.reduce((s,r)=>s+_biParseFlt(r.Valor_CP),0);
+  const cr=d.reduce((s,r)=>s+_biParseFlt(r.Valor_CR),0);
+  const sal=cr-cp;
+  const enc=d.reduce((s,r)=>s+_biParseFlt(r.JUROS)+_biParseFlt(r.MULTA),0);
+  const c=(icon,lbl,val,stl='')=>`<div class="sum-card">
+    <div class="sum-icon">${icon}</div>
+    <div class="sum-val" style="${stl}">${R$(val)}</div>
+    <div class="sum-sub">${lbl}</div>
+  </div>`;
+  el.innerHTML=`
+    ${c('💳','Total Contas a Pagar',cp,'color:var(--red)')}
+    ${c('💰','Total Contas a Receber',cr,'color:var(--green)')}
+    ${c('⚖️','Saldo (CR − CP)',sal,sal>=0?'color:var(--green)':'color:var(--red)')}
+    ${c('⚠️','Juros + Multas',enc)}`;
+}
+
+function _biRenderBar(canvasId,anoCol,mesCol){
+  _biDestroyChart(canvasId);
+  const canvas=document.getElementById(canvasId); if(!canvas)return;
+  const d=_biFiltered();
+  const mp={};
+  d.forEach(r=>{
+    const a=String(r[anoCol]||''), m=String(r[mesCol]||'');
+    if(!a||!m) return;
+    const k=`${a}-${m}`;
+    if(!mp[k]) mp[k]={cp:0,cr:0,rows:[]};
+    mp[k].cp+=_biParseFlt(r.Valor_CP);
+    mp[k].cr+=_biParseFlt(r.Valor_CR);
+    mp[k].rows.push(r);
+  });
+  const keys=Object.keys(mp).sort();
+  if(!keys.length) return;
+  const labels=keys.map(k=>{ const[y,m]=k.split('-'); return `${BI_MES[parseInt(m)]||m}/${y}`; });
+  _biCharts[canvasId]=new Chart(canvas,{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'Contas a Pagar', data:keys.map(k=>mp[k].cp), backgroundColor:'rgba(220,38,38,.75)',  borderRadius:4, _rows:keys.map(k=>mp[k].rows)},
+        {label:'Contas a Receber',data:keys.map(k=>mp[k].cr), backgroundColor:'rgba(5,150,105,.75)', borderRadius:4, _rows:keys.map(k=>mp[k].rows)},
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{position:'top',labels:{font:{size:12}}},
+        tooltip:{callbacks:{
+          label:ctx=>` ${ctx.dataset.label}: ${R$(ctx.parsed.y)}`,
+          afterBody(items){
+            const it=items[0]; if(!it)return[];
+            const rows=it.dataset._rows?.[it.dataIndex]||[];
+            const valCol=it.datasetIndex===0?'Valor_CP':'Valor_CR';
+            const byT={};
+            rows.forEach(r=>{ const t=r.Terceiro||'—'; byT[t]=(byT[t]||0)+_biParseFlt(r[valCol]); });
+            const top=Object.entries(byT).sort((a,b)=>b[1]-a[1]).slice(0,3);
+            if(!top.length)return[];
+            return['','📌 Top Terceiros:',...top.map(([t,v])=>`  ${t}: ${R$(v)}`)];
+          }
+        }}
+      },
+      scales:{
+        x:{ticks:{font:{size:11}}},
+        y:{ticks:{callback:v=>R$(v),font:{size:11}},grid:{color:'rgba(0,0,0,.04)'}}
+      }
+    }
+  });
+}
+
+function _biRenderPie(canvasId,valCol,grpCol){
+  _biDestroyChart(canvasId);
+  const canvas=document.getElementById(canvasId); if(!canvas)return;
+  const d=_biFiltered();
+  const mp={};
+  d.forEach(r=>{
+    const k=String(r[grpCol]||'(sem classificação)');
+    mp[k]=(mp[k]||0)+_biParseFlt(r[valCol]);
+  });
+  const entries=Object.entries(mp).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  if(!entries.length)return;
+  const total=entries.reduce((s,[,v])=>s+v,0);
+  _biCharts[canvasId]=new Chart(canvas,{
+    type:'pie',
+    data:{
+      labels:entries.map(([k])=>k),
+      datasets:[{
+        data:entries.map(([,v])=>v),
+        backgroundColor:entries.map((_,i)=>BI_PALETTE[i%BI_PALETTE.length]),
+        borderWidth:1.5, borderColor:'white'
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{position:'right',labels:{font:{size:11},boxWidth:12,padding:8}},
+        tooltip:{callbacks:{label:ctx=>{
+          const pct=total?((ctx.parsed/total)*100).toFixed(1):'0';
+          return ` ${ctx.label}: ${R$(ctx.parsed)} (${pct}%)`;
+        }}}
+      }
+    }
+  });
+}
+
+function _biRenderPieCP(){ _biRenderPie('bi-pie-cp','Valor_CP',biPieGrpCP); }
+function _biRenderPieCR(){ _biRenderPie('bi-pie-cr','Valor_CR',biPieGrpCR); }
 
 // ════════════════════════════════════════════════════════
 //  ESTRUTURAÇÃO
